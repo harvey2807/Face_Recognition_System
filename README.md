@@ -3,3 +3,4 @@ This is a project Python subject which using model AI to detect face of classmat
 Teammate:
   Dang Tran Tan Luc - 22130158 (Leader)
   Phùng Khánh Duy - 22130062 
+  Nguyen Thi Ngoc Diem - 22130038
