@@ -11,14 +11,14 @@ class MainWindow(QWidget):
 
         # Set the window title
         self.setWindowTitle('Face Recognition System')
-        self.setGeometry(50, 50, 1200, 700)        # Show the window
-        self.setFixedSize(1200, 700)
+        self.setGeometry(100, 100, 1200, 700)
         self.setStyleSheet("background-color: lightblue;")
 
         # Create a white panel (QFrame)
         self.panel = QFrame(self)
         self.panel.setGeometry(25, 25, 1150, 650)
         self.panel.setStyleSheet("""
+            color:black;
             background-color: white;
             border-radius: 10px;
         """)
@@ -124,7 +124,8 @@ class MainWindow(QWidget):
         self.form_widget = QWidget(self.main_frame)
         # self.form_widget.setGeometry(130, 65, 120, 570)
         self.form_widget.setStyleSheet("""
-                  background-color: white;
+                color:black;
+                background-color: white;
                  """)
 
         form_layout = QVBoxLayout (self.form_widget)

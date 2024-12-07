@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QRadioButton, QTextEdit,
-    QVBoxLayout, QHBoxLayout, QGroupBox, QGridLayout, QSizePolicy
+    QVBoxLayout, QHBoxLayout, QGroupBox, QGridLayout
 )
 from PyQt6.QtCore import Qt
 
@@ -62,17 +62,13 @@ class StudentInformationManagement(QWidget):
         course_layout = QGridLayout()
         self.year_combo = QComboBox()
         self.year_combo.addItems(["2022", "2023", "2024"])
-        self.base_combo = QComboBox()
-        self.base_combo.addItems(["1", "2", "3"])
 
         # Điều chỉnh chiều cao của các widget trong phần thông tin khóa học
         self.year_combo.setMinimumHeight(30)
-        self.base_combo.setMinimumHeight(30)
+
 
         course_layout.addWidget(QLabel("Khóa học:"), 0, 0)
         course_layout.addWidget(self.year_combo, 0, 1)
-        course_layout.addWidget(QLabel("Cơ sở:"), 0, 2)
-        course_layout.addWidget(self.base_combo, 0, 3)
 
         course_group.setLayout(course_layout)
 
@@ -149,44 +145,11 @@ class StudentInformationManagement(QWidget):
 
         table_group.setLayout(table_layout)
 
-        # Phần quản lý lớp học (bên phải dưới)
-        class_group = QGroupBox("Quản lý lớp học")
-        class_layout = QGridLayout()
-        self.class_list = QComboBox()
-        self.class_list.addItems(["9A", "9B", "9C"])
-        self.search_class_button = QPushButton("Tìm kiếm")
-        self.view_all_class_button = QPushButton("Xem tất cả")
-        self.class_name_input = QLineEdit()
-        self.class_id_input = QLineEdit()
-        self.result_text = QTextEdit()
-        self.result_text.setReadOnly(True)  # Chỉ đọc
-
-        class_layout.addWidget(QLabel("Lớp:"), 0, 0)
-        class_layout.addWidget(self.class_list, 0, 1)
-        class_layout.addWidget(self.search_class_button, 0, 2)
-        class_layout.addWidget(self.view_all_class_button, 0, 3)
-        class_layout.addWidget(QLabel("Mã lớp:"), 1, 0)
-        class_layout.addWidget(self.class_id_input, 1, 1)
-        class_layout.addWidget(QLabel("Tên lớp:"), 1, 2)
-        class_layout.addWidget(self.class_name_input, 1, 3)
-        class_layout.addWidget(QLabel("Kết quả:"), 2, 0)
-        class_layout.addWidget(self.result_text, 3, 0, 1, 4)
-
-        # Thêm các nút Sửa và Xóa
-        update_button_layout = QHBoxLayout()
-        self.update_class_button = QPushButton("Sửa")
-        self.delete_class_button = QPushButton("Xóa")
-        update_button_layout.addWidget(self.update_class_button)
-        update_button_layout.addWidget(self.delete_class_button)
-        class_layout.addLayout(update_button_layout, 4, 0, 1, 4)
-
-        class_group.setLayout(class_layout)
 
         # Thêm các phần vào layout chính
         grid_layout.addWidget(course_group, 0, 0)
         grid_layout.addWidget(student_group, 1, 0)
         grid_layout.addWidget(table_group, 0, 1)
-        grid_layout.addWidget(class_group, 1, 1)
 
         main_layout.addLayout(grid_layout)
         self.setLayout(main_layout)
