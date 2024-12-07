@@ -2,7 +2,7 @@ import sys
 from PyQt6.QtCore import QTimer, QTime, QDate, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, \
-    QGraphicsDropShadowEffect, QLineEdit, QFormLayout
+    QGraphicsDropShadowEffect, QLineEdit, QFormLayout, QStackedWidget
 
 
 class MainWindow(QWidget):
@@ -73,12 +73,12 @@ class MainWindow(QWidget):
         title_layout = QHBoxLayout(self.title_panel)
         title_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.title_label = QLabel("Hệ thống nhận diện khuôn mặt")
+        self.title_label = QLabel("Đổi mật khẩu")
         self.title_label.setStyleSheet("font-size: 20px; font-weight: bold;")
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_layout.addWidget(self.title_label)
 
-        # Tạo menu bên trái
+        # Tạo QWidget menu bên trái
         self.menu_widget = QWidget(self.panel)
         menu_layout = QVBoxLayout(self.menu_widget)
         self.menu_widget.setGeometry(5, 65, 120, 570)
@@ -105,24 +105,27 @@ class MainWindow(QWidget):
             btn.setGraphicsEffect(shadow_effect_btn)
             menu_layout.addWidget(btn)
 
-        # Tạo main frame chính
-        self.main_frame = QFrame(self.panel)
-        self.main_frame.setGeometry(130, 65, 1000, 570)
-        self.main_frame.setStyleSheet("""
+        # QStackedWidget để quản lý các màn hình
+        self.stack = QStackedWidget(self.panel)
+        # self.setCentralWidget(self.stack)
+
+        # Tạo reset_pw frame
+        self.resetpw_frame = QFrame(self.panel)
+        self.resetpw_frame.setGeometry(130, 65, 1000, 570)
+        self.resetpw_frame.setStyleSheet("""
             background-color: #FFCC99;
            """)
 
-
         # Tạo hiệu ứng shadow thật
-        shadow_effect = QGraphicsDropShadowEffect(self.main_frame)
+        shadow_effect = QGraphicsDropShadowEffect(self.resetpw_frame)
         shadow_effect.setBlurRadius(10)  # Độ nhòe của bóng
         shadow_effect.setXOffset(5)  # Độ dịch ngang
         shadow_effect.setYOffset(5)  # Độ dịch dọc
         shadow_effect.setColor(QColor(0, 0, 0, 50))  # Màu của bóng (đen mờ)
-        self.main_frame.setGraphicsEffect(shadow_effect)
+        self.resetpw_frame.setGraphicsEffect(shadow_effect)
 
         # Tạo form
-        self.form_widget = QWidget(self.main_frame)
+        self.form_widget = QWidget(self.resetpw_frame)
         self.form_widget.setStyleSheet("""
                   background-color: white;
                  """)
@@ -130,9 +133,9 @@ class MainWindow(QWidget):
 
         form_layout = QVBoxLayout (self.form_widget)
         # Tạo layout cho main_frame
-        main_layout = QVBoxLayout(self.main_frame)
-        main_layout.addWidget(self.form_widget)
-        main_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
+        resetpw_layout = QVBoxLayout(self.resetpw_frame)
+        resetpw_layout.addWidget(self.form_widget)
+        resetpw_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
 
         # Tạo các trường nhập liệu
         self.user_label = QLabel("Tài khoản")
@@ -184,9 +187,11 @@ class MainWindow(QWidget):
         self.form_widget.setLayout(form_layout)
 
         # Tạo layout cho main_frame và thêm form_widget vào
-        main_layout = QVBoxLayout(self)
-        main_layout.addWidget(self.form_widget)
-        main_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
+        resetpw_layout = QVBoxLayout(self)
+        resetpw_layout.addWidget(self.form_widget)
+        resetpw_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
+
+
 
         # Timer to update time and date every second
         timer = QTimer(self)
