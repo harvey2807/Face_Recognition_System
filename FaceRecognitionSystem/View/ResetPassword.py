@@ -83,7 +83,7 @@ class MainWindow(QWidget):
         menu_layout = QVBoxLayout(self.menu_widget)
         self.menu_widget.setGeometry(5, 65, 120, 570)
 
-        buttons = ["Trang chủ", "Quản lý", "Nhận diện", "Mật khẩu", "Thoát"]
+        buttons = ["Thống kê", "Quản lý", "Nhận diện", "Mật khẩu", "Thoát"]
         for button in buttons:
             # Tạo hiệu ứng shadow thật
             shadow_effect_btn = QGraphicsDropShadowEffect()
@@ -112,6 +112,7 @@ class MainWindow(QWidget):
             background-color: #FFCC99;
            """)
 
+
         # Tạo hiệu ứng shadow thật
         shadow_effect = QGraphicsDropShadowEffect(self.main_frame)
         shadow_effect.setBlurRadius(10)  # Độ nhòe của bóng
@@ -122,10 +123,10 @@ class MainWindow(QWidget):
 
         # Tạo form
         self.form_widget = QWidget(self.main_frame)
-        # self.form_widget.setGeometry(130, 65, 120, 570)
         self.form_widget.setStyleSheet("""
                   background-color: white;
                  """)
+        self.form_widget.setMinimumSize(400, 400)
 
         form_layout = QVBoxLayout (self.form_widget)
         # Tạo layout cho main_frame
@@ -159,6 +160,7 @@ class MainWindow(QWidget):
               background-color: white;
               border-radius: 10px;
               border: 3px solid #FFCD99;
+              margin: 20px
           """)
         # Áp dụng hiệu ứng bóng (shadow) cho nút
         shadow_effect = QGraphicsDropShadowEffect(self.confirm_button)
