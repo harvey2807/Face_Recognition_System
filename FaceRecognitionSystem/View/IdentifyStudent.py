@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLabel, QVBoxLayout, 
     QGraphicsDropShadowEffect, QLineEdit, QFormLayout
 
 
-class MainWindow(QWidget):
+class IdentifyStudent(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -83,7 +83,7 @@ class MainWindow(QWidget):
         menu_layout = QVBoxLayout(self.menu_widget)
         self.menu_widget.setGeometry(5, 65, 120, 570)
 
-        buttons = ["Trang chủ", "Quản lý", "Nhận diện", "Mật khẩu", "Thoát"]
+        buttons = ["Thống kê", "Quản lý", "Nhận diện", "Mật khẩu", "Thoát"]
         for button in buttons:
             # Tạo hiệu ứng shadow thật
             shadow_effect_btn = QGraphicsDropShadowEffect()
@@ -112,80 +112,6 @@ class MainWindow(QWidget):
             background-color: #FFCC99;
            """)
 
-        # Tạo hiệu ứng shadow thật
-        shadow_effect = QGraphicsDropShadowEffect(self.main_frame)
-        shadow_effect.setBlurRadius(10)  # Độ nhòe của bóng
-        shadow_effect.setXOffset(5)  # Độ dịch ngang
-        shadow_effect.setYOffset(5)  # Độ dịch dọc
-        shadow_effect.setColor(QColor(0, 0, 0, 50))  # Màu của bóng (đen mờ)
-        self.main_frame.setGraphicsEffect(shadow_effect)
-
-        # Tạo form
-        self.form_widget = QWidget(self.main_frame)
-        # self.form_widget.setGeometry(130, 65, 120, 570)
-        self.form_widget.setStyleSheet("""
-                  background-color: white;
-                 """)
-
-        form_layout = QVBoxLayout (self.form_widget)
-        # Tạo layout cho main_frame
-        main_layout = QVBoxLayout(self.main_frame)
-        main_layout.addWidget(self.form_widget)
-        main_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
-
-        # Tạo các trường nhập liệu
-        self.user_label = QLabel("Tài khoản")
-        self.user_label.setStyleSheet("font-size: 15px; font-weight: bold;")
-
-        self.password_old_label = QLabel("Mật khẩu cũ")
-        self.password_old_label.setStyleSheet("font-size: 15px; font-weight: bold;")
-
-        self.password_new_label = QLabel("Mật khẩu mới")
-        self.password_new_label.setStyleSheet("font-size: 15px; font-weight: bold;")
-
-        self.password_repeat_label = QLabel("Nhập lại mật khẩu")
-        self.password_repeat_label.setStyleSheet("font-size: 15px; font-weight: bold;")
-
-        self.username_field = QLineEdit()
-        self.password_old_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
-        self.password_new_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
-        self.password_repeat_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
-
-        # Tạo nút Xác nhận
-        self.confirm_button = QPushButton('Xác nhận')
-        self.confirm_button.setStyleSheet("""
-              font-size: 15px;
-              padding: 10px;
-              background-color: white;
-              border-radius: 10px;
-              border: 3px solid #FFCD99;
-          """)
-        # Áp dụng hiệu ứng bóng (shadow) cho nút
-        shadow_effect = QGraphicsDropShadowEffect(self.confirm_button)
-        shadow_effect.setBlurRadius(10)
-        shadow_effect.setXOffset(5)
-        shadow_effect.setYOffset(5)
-        shadow_effect.setColor(QColor(0, 0, 0, 50))
-        self.confirm_button.setGraphicsEffect(shadow_effect)
-
-
-        # place the widget on the window
-        form_layout.addWidget(self.user_label)
-        form_layout.addWidget(self.username_field)
-        form_layout.addWidget(self.password_old_label)
-        form_layout.addWidget(self.password_old_field)
-        form_layout.addWidget(self.password_new_label)
-        form_layout.addWidget(self.password_new_field)
-        form_layout.addWidget(self.password_repeat_label)
-        form_layout.addWidget(self.password_repeat_field)
-        form_layout.addWidget(self.confirm_button)
-        self.form_widget.setLayout(form_layout)
-
-        # Tạo layout cho main_frame và thêm form_widget vào
-        main_layout = QVBoxLayout(self)
-        main_layout.addWidget(self.form_widget)
-        main_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
-
         # Timer to update time and date every second
         timer = QTimer(self)
         timer.timeout.connect(self.update_time)
@@ -208,7 +134,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # Create the main window
-    window = MainWindow()
+    window = IdentifyStudent()
 
     # Start the event loop
     sys.exit(app.exec())
