@@ -106,6 +106,7 @@ class HomeView(QWidget):
         self.StudentInformationManagement = StudentInformationManagement(self)
         self.SystemStatistics = SystemStatistics(self)
 
+
         self.tab.addTab(self.RecognitionStudent_page, 'Nhận diện')
         self.tab.addTab(self.ResetPassword_page, 'Đổi mật khẩu')
         self.tab.addTab(self.StudentInformationManagement, 'Quản lí')

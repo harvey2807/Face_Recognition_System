@@ -5,13 +5,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 import sys
 
-class BaseTableWindow(QMainWindow):
+class BaseTableWindow(QWidget):
     def __init__(self, title):
         super().__init__()
         self.setWindowTitle(title)
         self.setGeometry(50, 40, 1200, 700)
         self.setup_ui(title)
-        self.center_window()
         self.setStyleSheet("background-color: white; color:black;")
 
     def setup_ui(self, title):
@@ -95,32 +94,5 @@ class BaseTableWindow(QMainWindow):
 
         container = QWidget()
         container.setLayout(layout)
-        self.setCentralWidget(container)
+        self.setLayout(layout)  # Đặt layout vào widget cha
 
-
-    def center_window(self):
-        # Lấy thông tin khung của cửa sổ
-        frame_geometry = self.frameGeometry()
-        # Lấy màn hình chính (màn hình đầu tiên)
-        screen = QApplication.primaryScreen()
-        # Lấy trung tâm của màn hình
-        screen_center = screen.availableGeometry().center()
-        # Đặt khung cửa sổ sao cho nó nằm ở giữa màn hình
-        frame_geometry.moveCenter(screen_center)
-        # Đặt vị trí của cửa sổ
-        self.move(frame_geometry.topLeft())
-
-
-class LateWindow(BaseTableWindow):
-    def __init__(self):
-        super().__init__("Học sinh đi muộn")
-
-
-class AbsentWindow(BaseTableWindow):
-    def __init__(self):
-        super().__init__("Học sinh vắng")
-
-
-class NoAttendanceWindow(BaseTableWindow):
-    def __init__(self):
-        super().__init__("Học sinh không điểm danh")
