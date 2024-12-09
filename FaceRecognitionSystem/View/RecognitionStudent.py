@@ -5,16 +5,18 @@ from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLabel, QVBoxLayout, 
     QGraphicsDropShadowEffect, QLineEdit, QFormLayout
 
 
-class IdentifyStudent(QWidget):
-    def __init__(self):
+class IdentifyStudentView(QWidget):
+    def __init__(self,stacked_widget):
         super().__init__()
-
+        self.stacked_widget = stacked_widget
         # Set the window title
         self.setWindowTitle('Face Recognition System')
         self.setGeometry(50, 50, 1200, 700)        # Show the window
         self.setFixedSize(1200, 700)
         self.setStyleSheet("background-color: lightblue;")
+        self.init_ui()
 
+    def init_ui(self):
         # Create a white panel (QFrame)
         self.panel = QFrame(self)
         self.panel.setGeometry(25, 25, 1150, 650)
@@ -129,12 +131,3 @@ class IdentifyStudent(QWidget):
         self.time_label.setText(current_time)
         self.date_label.setText(current_date)
 
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-
-    # Create the main window
-    window = IdentifyStudent()
-
-    # Start the event loop
-    sys.exit(app.exec())
