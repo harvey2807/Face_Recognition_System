@@ -1,127 +1,166 @@
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QPushButton, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, QLineEdit, QComboBox
-)
-from PyQt6.QtCore import Qt
 import sys
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QFrame
+)
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from FaceRecognitionSystem.View.BaseTableWindow import LateWindow, AbsentWindow, NoAttendanceWindow
 
 
 class SystemStatistics(QMainWindow):
-    def __init__(self):
+    def __init__(self,stacked_widget):
         super().__init__()
-        self.setWindowTitle("Thống kê hệ thống")  # Đặt tiêu đề cửa sổ
-        self.setGeometry(100, 100, 1200, 700)  # Đặt kích thước và vị trí cửa sổ
-        self.setup_ui()  # Gọi phương thức setup_ui để tạo giao diện
+        self.stacked_widget = stacked_widget
+        # Cài đặt tiêu đề và kích thước cửa sổ chính
+        self.setWindowTitle("Thống kê hệ thống")
+        self.setGeometry(100, 100, 1200, 700)
+        self.setup_ui()  # Gọi hàm thiết lập giao diện
+        self.center_window()
+        self.setStyleSheet("background-color: white; color:black;")  # Đặt màu nền và màu chữ
 
     def setup_ui(self):
-        # Tạo layout chính theo chiều dọc (VBox)
+        # Tạo layout chính
         main_layout = QVBoxLayout()
 
-        # Phần tiêu đề
-        header_label = QLabel("Thống kê hệ thống")
-        header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa tiêu đề
-        header_label.setStyleSheet("font-size: 24px; font-weight: bold; color: black;")  # Đặt kiểu cho tiêu đề
-        main_layout.addWidget(header_label)  # Thêm tiêu đề vào layout
+        # Thêm biểu đồ với viền
+        chart_widget = self.create_chart_with_border()
+        main_layout.addWidget(chart_widget)
 
-        # Phần thống kê tổng quát
-        summary_layout = QHBoxLayout()  # Layout theo chiều ngang
-        # Thêm các thẻ thống kê vào layout ngang
-        summary_layout.addWidget(self.create_summary_card("Số Học sinh", "12", "#4faaff"))
-        summary_layout.addWidget(self.create_summary_card("Số bản điểm danh", "1", "#3cd17f"))
-        summary_layout.addWidget(self.create_summary_card("Số lần đi muộn", "1", "#9753cc"))
-        summary_layout.addWidget(self.create_summary_card("Số lần vắng", "42", "#e44352"))
-        main_layout.addLayout(summary_layout)  # Thêm layout vào main_layout
+        # Tạo layout cho các nút
+        button_layout = QHBoxLayout()
+        late_button = self.create_hover_button("Học sinh đi muộn")  # Nút "Học sinh đi muộn"
+        late_button.clicked.connect(self.open_late_window)  # Kết nối nút với phương thức mở cửa sổ LateWindow
+        absent_button = self.create_hover_button("Học sinh vắng")  # Nút "Học sinh vắng"
+        absent_button.clicked.connect(self.open_absent_window)  # Kết nối nút với phương thức mở cửa sổ AbsentWindow
+        no_attendance_button = self.create_hover_button("Học sinh đã điểm danh")  # Nút "Học sinh đã điểm danh"
+        no_attendance_button.clicked.connect(
+            self.open_no_attendance_window)  # Kết nối nút với phương thức mở cửa sổ NoAttendanceWindow
+        button_layout.addWidget(late_button)
+        button_layout.addWidget(absent_button)
+        button_layout.addWidget(no_attendance_button)
+        main_layout.addLayout(button_layout)  # Thêm layout các nút vào layout chính
 
-        # Phần bảng chi tiết
-        details_layout = QGridLayout()  # Layout dạng lưới
-
-        # Thêm các bảng chi tiết vào layout
-        details_layout.addWidget(self.create_table_section("Học sinh đi muộn"), 0, 0)
-        details_layout.addWidget(self.create_table_section("Học sinh vắng"), 1, 0)
-        details_layout.addWidget(self.create_table_section("Học sinh không điểm danh"), 0, 1, 2, 1)
-
-        main_layout.addLayout(details_layout)  # Thêm layout chi tiết vào main_layout
-
-        # Cài đặt layout chính của cửa sổ
+        # Tạo widget trung tâm và đặt layout chính cho nó
         container = QWidget()
-        container.setLayout(main_layout)  # Gán layout chính cho container
-        self.setCentralWidget(container)  # Đặt container làm widget trung tâm của cửa sổ
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)  # Đặt widget trung tâm cho cửa sổ chính
 
-        # Đặt màu nền của cửa sổ chính là trắng và chữ màu đen
-        self.setStyleSheet("background-color: white; color: black;")
+    def center_window(self):
+        # Lấy thông tin khung của cửa sổ
+        frame_geometry = self.frameGeometry()
+        # Lấy màn hình chính (màn hình đầu tiên)
+        screen = QApplication.primaryScreen()
+        # Lấy trung tâm của màn hình
+        screen_center = screen.availableGeometry().center()
+        # Đặt khung cửa sổ sao cho nó nằm ở giữa màn hình
+        frame_geometry.moveCenter(screen_center)
+        # Đặt vị trí của cửa sổ
+        self.move(frame_geometry.topLeft())
 
-    def create_summary_card(self, title, value, color):
-        """
-        Tạo thẻ thống kê tổng quát với tiêu đề, giá trị và màu nền chỉ định.
-        :param title: Tiêu đề thẻ (ví dụ: "Số Học sinh")
-        :param value: Giá trị thẻ (ví dụ: "12")
-        :param color: Màu nền của thẻ
-        :return: QWidget chứa thẻ thống kê
-        """
-        card = QWidget()
-        layout = QVBoxLayout()  # Layout theo chiều dọc trong thẻ
-        card.setStyleSheet(f"background-color: {color};  border-radius: 10px; padding: 10px;")  # Đặt kiểu cho thẻ
-        card.setFixedSize(200, 100)  # Đặt kích thước cố định cho thẻ
+    def create_chart_with_border(self):
+        """Tạo một container chứa biểu đồ với viền và hiệu ứng."""
+        # Tạo một QFrame để chứa biểu đồ
+        chart_container = QFrame()
+        chart_container.setStyleSheet("""
+            QFrame {
+                background-color: #ffffff; /* Nền trắng */
+                border: 2px solid #4faaff; /* Viền xanh dương */
+                border-radius: 10px;      /* Bo góc */
+                padding: 10px;           /* Khoảng cách nội dung */
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Hiệu ứng bóng */
+            }
+        """)
 
-        title_label = QLabel(title)  # Tạo nhãn tiêu đề cho thẻ
-        title_label.setStyleSheet("font-size: 16px; color: white;")  # Đặt kiểu cho tiêu đề
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa tiêu đề
+        # Thêm biểu đồ vào container
+        chart_layout = QVBoxLayout()
+        chart = self.create_area_chart()  # Gọi hàm tạo biểu đồ
+        chart_layout.addWidget(chart)
+        chart_container.setLayout(chart_layout)
 
-        value_label = QLabel(value)  # Tạo nhãn giá trị cho thẻ
-        value_label.setStyleSheet("font-size: 24px; font-weight: bold; color: white;")  # Đặt kiểu cho giá trị
-        value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa giá trị
+        return chart_container  # Trả về container chứa biểu đồ
 
-        layout.addWidget(title_label)  # Thêm tiêu đề vào layout
-        layout.addWidget(value_label)  # Thêm giá trị vào layout
-        card.setLayout(layout)  # Gán layout vào thẻ
+    def create_area_chart(self):
+        """Tạo biểu đồ dạng vùng (area chart) với phong cách mềm mại."""
+        # Tạo đối tượng Figure từ matplotlib
+        figure = Figure(figsize=(10, 6))
+        ax = figure.add_subplot(111)
 
-        return card  # Trả về thẻ thống kê
+        # Dữ liệu mẫu
+        x = ["Buổi 1", "Buổi2", "Buổi 3", "Buổi 4", "Buổi 5"]
+        sumst = [10, 30, 25, 20, 15]  # Tổng số học sinh
+        miss = [15, 25, 20, 30, 10]   # Số lần vắng
+        dd = [40, 15, 10, 25, 20]     # Số bản điểm danh
 
-    def create_table_section(self, section_title):
-        """
-        Tạo phần bảng chi tiết với tiêu đề và bảng dữ liệu.
-        :param section_title: Tiêu đề của phần bảng (ví dụ: "Học sinh đi muộn")
-        :return: QWidget chứa bảng chi tiết
-        """
-        section_widget = QWidget()  # Tạo widget chứa bảng
-        layout = QVBoxLayout()  # Layout theo chiều dọc
+        # Vẽ biểu đồ dạng vùng
+        ax.fill_between(x, sumst, color="#80bfff", alpha=0.7, label="Số học sinh")
+        ax.fill_between(x, miss, color="#ffcc80", alpha=0.7, label="Số lần vắng")
+        ax.fill_between(x, dd, color="#b3ff80", alpha=0.7, label="Số bản điểm danh")
 
-        # Tạo nhãn tiêu đề cho bảng
-        title_label = QLabel(section_title)
-        title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: black;")  # Đặt kiểu cho tiêu đề
-        layout.addWidget(title_label)  # Thêm tiêu đề vào layout
+        # Hiển thị giá trị lên các điểm dữ liệu
+        for i, value in enumerate(sumst):
+            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        for i, value in enumerate(miss):
+            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        for i, value in enumerate(dd):
+            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
 
-        # Tạo layout tìm kiếm với trường nhập liệu và các nút bấm
-        search_layout = QHBoxLayout()  # Layout theo chiều ngang cho các nút
-        search_input = QLineEdit()  # Trường nhập liệu
-        search_input.setPlaceholderText("ID Học sinh")  # Đặt placeholder cho trường nhập liệu
-        search_button = QPushButton("Tìm kiếm")  # Nút tìm kiếm
-        view_all_button = QPushButton("Xem tất cả")  # Nút xem tất cả
-        export_csv_button = QPushButton("Xuất CSV")  # Nút xuất CSV
-        search_layout.addWidget(search_input)  # Thêm trường nhập liệu vào layout
-        search_layout.addWidget(search_button)  # Thêm nút tìm kiếm vào layout
-        search_layout.addWidget(view_all_button)  # Thêm nút xem tất cả vào layout
-        search_layout.addWidget(export_csv_button)  # Thêm nút xuất CSV vào layout
-        layout.addLayout(search_layout)  # Thêm layout tìm kiếm vào layout chính
+        # Cài đặt tiêu đề, trục và phong cách
+        ax.set_title("Thống kê hệ thống", fontsize=18, fontweight="bold", color="#ffffff", pad=20)
+        ax.set_ylabel("Số lần", fontsize=12, color="#ffffff", labelpad=10)
+        ax.set_xlabel("Buổi", fontsize=12, color="#ffffff", labelpad=10)
+        ax.tick_params(axis="both", colors="#ffffff", labelsize=10)
+        ax.legend(loc="upper right", fontsize=10, facecolor="#4a4a4a", edgecolor="none", labelcolor="white")
 
-        # Tạo bảng hiển thị dữ liệu
-        table = QTableWidget()  # Tạo bảng
-        table.setColumnCount(5)  # Đặt số cột trong bảng
-        table.setHorizontalHeaderLabels(["ID SV", "Tên Học sinh", "Lớp học", "Ngày", "Trạng thái"])  # Đặt tiêu đề cột
-        table.setRowCount(10)  # Đặt số dòng trong bảng
-        for i in range(10):  # Thêm dữ liệu giả vào bảng
-            for j in range(5):
-                table.setItem(i, j, QTableWidgetItem(f"Dữ liệu {i+1},{j+1}"))
-        table.setStyleSheet("border: 1px solid black;")  # Thêm border cho bảng
+        # Cài đặt nền và lưới
+        ax.set_facecolor("#323a4a")  # Nền cho biểu đồ
+        figure.set_facecolor("#2e3b4e")  # Nền cho toàn bộ figure
+        ax.grid(color="#ffffff", linestyle="--", linewidth=0.5, alpha=0.3)
 
-        layout.addWidget(table)  # Thêm bảng vào layout
+        # Căn chỉnh khoảng cách và bo góc
+        figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, right=0.9)
 
-        section_widget.setLayout(layout)  # Gán layout vào widget chứa bảng
-        return section_widget  # Trả về widget chứa bảng chi tiết
+        # Nhúng biểu đồ vào PyQt
+        canvas = FigureCanvas(figure)
+        return canvas
 
+    def create_hover_button(self, text):
+        """Tạo một nút với hiệu ứng hover."""
+        button = QPushButton(text)  # Tạo nút
+        button.setFixedSize(200, 50)  # Đặt kích thước cố định
+        button.setStyleSheet("""
+            QPushButton {
+                font-size: 16px; /* Kích thước font */
+                padding: 10px; /* Khoảng cách nội dung */
+                background-color: #333333; /* Màu nền */
+                color: white; /* Màu chữ */
+                border: none; /* Không viền */
+                border-radius: 5px; /* Bo góc */
+                transition: all 0.3s; /* Hiệu ứng chuyển đổi */
+            }
+            QPushButton:hover {
+                background-color: #555555; /* Đổi màu khi hover */
+                transform: scale(1.05); /* Tăng kích thước nhẹ khi hover */
+            }
+        """)
+        return button  # Trả về nút đã tạo
+
+    def open_late_window(self):
+        self.late_window = LateWindow()
+        self.late_window.show()
+
+    def open_absent_window(self):
+        self.absent_window = AbsentWindow()
+        self.absent_window.show()
+
+    def open_no_attendance_window(self):
+        self.no_attendance_window = NoAttendanceWindow()
+        self.no_attendance_window.show()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)  # Khởi tạo ứng dụng
-    window = SystemStatistics()  # Khởi tạo cửa sổ thống kê
+    # Khởi chạy ứng dụng
+    app = QApplication(sys.argv)
+    window = SystemStatistics()  # Tạo đối tượng cửa sổ chính
     window.show()  # Hiển thị cửa sổ
-    sys.exit(app.exec())  # Chạy ứng dụng và thoát khi đóng cửa sổ
+    sys.exit(app.exec())  # Thoát ứng dụng khi đóng cửa sổ
