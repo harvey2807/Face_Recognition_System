@@ -1,127 +1,144 @@
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QPushButton, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, QLineEdit, QComboBox
-)
-from PyQt6.QtCore import Qt
 import sys
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QTabWidget
+)
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
+from FaceRecognitionSystem.View.AbsentWindow import AbsentWindow
+from FaceRecognitionSystem.View.NoAttendanceWindow import NoAttendanceWindow
 
 class SystemStatistics(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
-        self.setWindowTitle("Thống kê hệ thống")  # Đặt tiêu đề cửa sổ
-        self.setGeometry(100, 100, 1200, 700)  # Đặt kích thước và vị trí cửa sổ
-        self.setup_ui()  # Gọi phương thức setup_ui để tạo giao diện
+        self.stacked_widget = stacked_widget
+        self.setWindowTitle("Thống kê hệ thống")
+        self.setGeometry(100, 100, 1200, 700)
+        self.setup_ui()  # Gọi hàm thiết lập giao diện
+        self.setStyleSheet("background-color: white; color:black;")  # Đặt màu nền và màu chữ
 
     def setup_ui(self):
-        # Tạo layout chính theo chiều dọc (VBox)
+        # Tạo layout chính
         main_layout = QVBoxLayout()
 
-        # Phần tiêu đề
-        header_label = QLabel("Thống kê hệ thống")
-        header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa tiêu đề
-        header_label.setStyleSheet("font-size: 24px; font-weight: bold; color: black;")  # Đặt kiểu cho tiêu đề
-        main_layout.addWidget(header_label)  # Thêm tiêu đề vào layout
+        # Tạo QTabWidget và thêm các tab vào
+        tab_widget = QTabWidget(self)
 
-        # Phần thống kê tổng quát
-        summary_layout = QHBoxLayout()  # Layout theo chiều ngang
-        # Thêm các thẻ thống kê vào layout ngang
-        summary_layout.addWidget(self.create_summary_card("Số Học sinh", "12", "#4faaff"))
-        summary_layout.addWidget(self.create_summary_card("Số bản điểm danh", "1", "#3cd17f"))
-        summary_layout.addWidget(self.create_summary_card("Số lần đi muộn", "1", "#9753cc"))
-        summary_layout.addWidget(self.create_summary_card("Số lần vắng", "42", "#e44352"))
-        main_layout.addLayout(summary_layout)  # Thêm layout vào main_layout
+        tab_widget.clear()  # Xóa các tab cũ
+        tab_widget.addTab(self.create_statistics_tab(), "Thống kê")
+        tab_widget.addTab(self.create_no_attendance_tab(), "Học sinh vắng")
+        tab_widget.addTab(self.create_absent_tab(), "Học sinh đã điểm danh")
 
-        # Phần bảng chi tiết
-        details_layout = QGridLayout()  # Layout dạng lưới
+        # Thêm QTabWidget vào layout chính
+        main_layout.addWidget(tab_widget)
 
-        # Thêm các bảng chi tiết vào layout
-        details_layout.addWidget(self.create_table_section("Học sinh đi muộn"), 0, 0)
-        details_layout.addWidget(self.create_table_section("Học sinh vắng"), 1, 0)
-        details_layout.addWidget(self.create_table_section("Học sinh không điểm danh"), 0, 1, 2, 1)
-
-        main_layout.addLayout(details_layout)  # Thêm layout chi tiết vào main_layout
-
-        # Cài đặt layout chính của cửa sổ
+        # Tạo widget trung tâm và đặt layout chính cho nó
         container = QWidget()
-        container.setLayout(main_layout)  # Gán layout chính cho container
-        self.setCentralWidget(container)  # Đặt container làm widget trung tâm của cửa sổ
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)  # Đặt widget trung tâm cho cửa sổ chính
 
-        # Đặt màu nền của cửa sổ chính là trắng và chữ màu đen
-        self.setStyleSheet("background-color: white; color: black;")
+    def create_statistics_tab(self):
+        """Tạo tab thống kê chứa biểu đồ"""
+        statistics_tab = QWidget()
+        layout = QVBoxLayout()
 
-    def create_summary_card(self, title, value, color):
-        """
-        Tạo thẻ thống kê tổng quát với tiêu đề, giá trị và màu nền chỉ định.
-        :param title: Tiêu đề thẻ (ví dụ: "Số Học sinh")
-        :param value: Giá trị thẻ (ví dụ: "12")
-        :param color: Màu nền của thẻ
-        :return: QWidget chứa thẻ thống kê
-        """
-        card = QWidget()
-        layout = QVBoxLayout()  # Layout theo chiều dọc trong thẻ
-        card.setStyleSheet(f"background-color: {color};  border-radius: 10px; padding: 10px;")  # Đặt kiểu cho thẻ
-        card.setFixedSize(200, 100)  # Đặt kích thước cố định cho thẻ
+        # Thêm biểu đồ với viền
+        chart_widget = self.create_chart_with_border()
+        layout.addWidget(chart_widget)
 
-        title_label = QLabel(title)  # Tạo nhãn tiêu đề cho thẻ
-        title_label.setStyleSheet("font-size: 16px; color: white;")  # Đặt kiểu cho tiêu đề
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa tiêu đề
-
-        value_label = QLabel(value)  # Tạo nhãn giá trị cho thẻ
-        value_label.setStyleSheet("font-size: 24px; font-weight: bold; color: white;")  # Đặt kiểu cho giá trị
-        value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa giá trị
-
-        layout.addWidget(title_label)  # Thêm tiêu đề vào layout
-        layout.addWidget(value_label)  # Thêm giá trị vào layout
-        card.setLayout(layout)  # Gán layout vào thẻ
-
-        return card  # Trả về thẻ thống kê
-
-    def create_table_section(self, section_title):
-        """
-        Tạo phần bảng chi tiết với tiêu đề và bảng dữ liệu.
-        :param section_title: Tiêu đề của phần bảng (ví dụ: "Học sinh đi muộn")
-        :return: QWidget chứa bảng chi tiết
-        """
-        section_widget = QWidget()  # Tạo widget chứa bảng
-        layout = QVBoxLayout()  # Layout theo chiều dọc
-
-        # Tạo nhãn tiêu đề cho bảng
-        title_label = QLabel(section_title)
-        title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: black;")  # Đặt kiểu cho tiêu đề
-        layout.addWidget(title_label)  # Thêm tiêu đề vào layout
-
-        # Tạo layout tìm kiếm với trường nhập liệu và các nút bấm
-        search_layout = QHBoxLayout()  # Layout theo chiều ngang cho các nút
-        search_input = QLineEdit()  # Trường nhập liệu
-        search_input.setPlaceholderText("ID Học sinh")  # Đặt placeholder cho trường nhập liệu
-        search_button = QPushButton("Tìm kiếm")  # Nút tìm kiếm
-        view_all_button = QPushButton("Xem tất cả")  # Nút xem tất cả
-        export_csv_button = QPushButton("Xuất CSV")  # Nút xuất CSV
-        search_layout.addWidget(search_input)  # Thêm trường nhập liệu vào layout
-        search_layout.addWidget(search_button)  # Thêm nút tìm kiếm vào layout
-        search_layout.addWidget(view_all_button)  # Thêm nút xem tất cả vào layout
-        search_layout.addWidget(export_csv_button)  # Thêm nút xuất CSV vào layout
-        layout.addLayout(search_layout)  # Thêm layout tìm kiếm vào layout chính
-
-        # Tạo bảng hiển thị dữ liệu
-        table = QTableWidget()  # Tạo bảng
-        table.setColumnCount(5)  # Đặt số cột trong bảng
-        table.setHorizontalHeaderLabels(["ID SV", "Tên Học sinh", "Lớp học", "Ngày", "Trạng thái"])  # Đặt tiêu đề cột
-        table.setRowCount(10)  # Đặt số dòng trong bảng
-        for i in range(10):  # Thêm dữ liệu giả vào bảng
-            for j in range(5):
-                table.setItem(i, j, QTableWidgetItem(f"Dữ liệu {i+1},{j+1}"))
-        table.setStyleSheet("border: 1px solid black;")  # Thêm border cho bảng
-
-        layout.addWidget(table)  # Thêm bảng vào layout
-
-        section_widget.setLayout(layout)  # Gán layout vào widget chứa bảng
-        return section_widget  # Trả về widget chứa bảng chi tiết
+        statistics_tab.setLayout(layout)
+        return statistics_tab
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)  # Khởi tạo ứng dụng
-    window = SystemStatistics()  # Khởi tạo cửa sổ thống kê
-    window.show()  # Hiển thị cửa sổ
-    sys.exit(app.exec())  # Chạy ứng dụng và thoát khi đóng cửa sổ
+    def create_absent_tab(self):
+        """Tạo tab cho học sinh vắng"""
+        absent_tab = QWidget()
+        layout = QVBoxLayout()
+
+        # Tạo đối tượng AbsentWindow và thêm vào layout
+        self.absent_window_widget = AbsentWindow()  # Đảm bảo rằng AbsentWindow là một QWidget hoặc kế thừa QWidget
+        layout.addWidget(self.absent_window_widget)
+
+        absent_tab.setLayout(layout)
+        return absent_tab
+
+    def create_no_attendance_tab(self):
+        """Tạo tab cho học sinh đã điểm danh"""
+        no_attendance_tab = QWidget()
+        layout = QVBoxLayout()
+
+        # Tạo đối tượng NoAttendanceWindow và thêm vào layout
+        self.no_attendance_window_widget = NoAttendanceWindow()  # Đảm bảo rằng NoAttendanceWindow là một QWidget hoặc kế thừa QWidget
+        layout.addWidget(self.no_attendance_window_widget)
+
+        no_attendance_tab.setLayout(layout)
+        return no_attendance_tab
+
+    def create_chart_with_border(self):
+        """Tạo một container chứa biểu đồ với viền và hiệu ứng."""
+        # Tạo một QFrame để chứa biểu đồ
+        chart_container = QFrame()
+        chart_container.setStyleSheet(""" 
+            QFrame {
+                background-color: #ffffff; /* Nền trắng */
+                border: 2px solid #4faaff; /* Viền xanh dương */
+                border-radius: 10px;      /* Bo góc */
+                padding: 10px;           /* Khoảng cách nội dung */
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Hiệu ứng bóng */
+            }
+        """)
+
+        # Thêm biểu đồ vào container
+        chart_layout = QVBoxLayout()
+        chart = self.create_area_chart()  # Gọi hàm tạo biểu đồ
+        chart_layout.addWidget(chart)
+        chart_container.setLayout(chart_layout)
+
+        return chart_container  # Trả về container chứa biểu đồ
+
+    def create_area_chart(self):
+        """Tạo biểu đồ dạng vùng (area chart) với phong cách mềm mại."""
+        # Tạo đối tượng Figure từ matplotlib
+        figure = Figure(figsize=(10, 6))
+        ax = figure.add_subplot(111)
+
+        # Dữ liệu mẫu
+        x = ["Buổi 1", "Buổi2", "Buổi 3", "Buổi 4", "Buổi 5"]
+        sumst = [10, 30, 25, 20, 15]  # Tổng số học sinh
+        miss = [15, 25, 20, 30, 10]   # Số lần vắng
+        dd = [40, 15, 10, 25, 20]     # Số bản điểm danh
+
+        # Vẽ biểu đồ dạng vùng
+        ax.fill_between(x, sumst, color="#F8E71C", alpha=0.7, label="Số học sinh")
+        ax.fill_between(x, miss, color="#F5A623", alpha=0.7, label="Số lần vắng")
+        ax.fill_between(x, dd, color="#80B354", alpha=0.7, label="Số bản điểm danh")
+
+        # Hiển thị giá trị lên các điểm dữ liệu
+        for i, value in enumerate(sumst):
+            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        for i, value in enumerate(miss):
+            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        for i, value in enumerate(dd):
+            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+
+        # Cài đặt tiêu đề, trục và phong cách
+        ax.set_title("Thống kê hệ thống", fontsize=18, fontweight="bold", color="#ffffff", pad=20)
+        ax.set_ylabel("Số lần", fontsize=12, color="#ffffff", labelpad=10)
+        ax.set_xlabel("Buổi", fontsize=12, color="#ffffff", labelpad=10)
+        ax.tick_params(axis="both", colors="#ffffff", labelsize=10)
+        ax.legend(loc="upper right", fontsize=10, facecolor="#4a4a4a", edgecolor="none", labelcolor="white")
+
+        # Cài đặt nền và lưới
+        ax.set_facecolor("#838CC7")  # Nền cho biểu đồ
+        figure.set_facecolor("#838CC7")  # Nền cho toàn bộ figure
+        ax.grid(color="#ffffff", linestyle="--", linewidth=0.5, alpha=0.3)
+
+        # Căn chỉnh khoảng cách và bo góc
+        figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, right=0.9)
+
+        # Nhúng biểu đồ vào PyQt
+        canvas = FigureCanvas(figure)
+        return canvas
+
+
