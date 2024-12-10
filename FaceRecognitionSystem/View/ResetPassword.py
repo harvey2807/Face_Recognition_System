@@ -40,9 +40,37 @@ class ResetPasswordView(QWidget):
         self.password_repeat_label.setStyleSheet("font-size: 15px; font-weight: bold;")
 
         self.username_field = QLineEdit()
+        self.username_field.setPlaceholderText("Tên đăng nhập")
+        self.username_field.setStyleSheet("""
+            border: 1px solid #CCCCCC;
+            border-radius: 4px;
+            padding: 5px;
+            margin-bottom: 10px;
+        """)
         self.password_old_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
+        self.password_old_field.setPlaceholderText("Mật khẩu cũ")
+        self.password_old_field.setStyleSheet("""
+            border: 1px solid #CCCCCC;
+            border-radius: 4px;
+            padding: 5px;
+            margin-bottom: 10px;
+        """)
         self.password_new_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
+        self.password_new_field.setPlaceholderText("Mật khẩu mới")
+        self.password_new_field.setStyleSheet("""
+            border: 1px solid #CCCCCC;
+            border-radius: 4px;
+            padding: 5px;
+            margin-bottom: 10px;
+        """)
         self.password_repeat_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
+        self.password_repeat_field.setPlaceholderText("Nhập lại mật khẩu mới")
+        self.password_repeat_field.setStyleSheet("""
+            border: 1px solid #CCCCCC;
+            border-radius: 4px;
+            padding: 5px;
+            margin-bottom: 10px;
+        """)
 
         # Tạo nút Xác nhận
         self.confirm_button = QPushButton('Xác nhận')

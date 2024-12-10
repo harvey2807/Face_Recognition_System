@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, QTime, QDate
 
-from FaceRecognitionSystem.View.StudentInformationManagement import StudentInformationManagement
-from FaceRecognitionSystem.View.SystemStatistics import SystemStatistics
+from StudentInformationManagement import StudentInformationManagement
+from SystemStatistics import SystemStatistics
 from ResetPassword import ResetPasswordView
 from RecognitionStudent import RecognitionStudentView
 
@@ -97,6 +97,7 @@ class HomeView(QWidget):
             QTabBar::tab:selected { 
                 background: white; 
                 border-bottom: 1px solid #0078D7;
+                padding: 5px;
             }
         """)
 
@@ -106,11 +107,10 @@ class HomeView(QWidget):
         self.StudentInformationManagement = StudentInformationManagement(self)
         self.SystemStatistics = SystemStatistics(self)
 
-
+        self.tab.addTab(self.SystemStatistics, 'Thống kê')
+        self.tab.addTab(self.StudentInformationManagement, 'Quản lí')
         self.tab.addTab(self.RecognitionStudent_page, 'Nhận diện')
         self.tab.addTab(self.ResetPassword_page, 'Đổi mật khẩu')
-        self.tab.addTab(self.StudentInformationManagement, 'Quản lí')
-        self.tab.addTab(self.SystemStatistics, 'Thống kê')
 
         # Thêm QTabWidget vào layout chính
         self.main_layout.addWidget(self.tab)
