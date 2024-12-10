@@ -1,4 +1,4 @@
-from FaceRecognitionSystem.View.BaseTableWindow import BaseTableWindow
+from BaseTableWindow import BaseTableWindow
 
 
 class AbsentWindow(BaseTableWindow):

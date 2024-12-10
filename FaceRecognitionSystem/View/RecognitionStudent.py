@@ -13,25 +13,47 @@ class RecognitionStudentView(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Main widget và layout chính
-        self.main_widget = QWidget(self)
-        self.main_layout = QVBoxLayout(self.main_widget)
-        self.main_widget.setStyleSheet("background-color: #F5F5F5;")
-        self.main_widget.setGeometry(0, 0, 1160, 565)
+        # Định nghĩa CSS để tạo giao diện
+        self.setStyleSheet("""
+                QWidget {
+                        background-color: white;
+                        color: black;
+                    }
+                    QLabel {
+                        font-size: 14px;
+                    }
+                    QLineEdit, QComboBox, QTableWidget {
+                        border: 1px solid black;
+                        border-radius: 4px;
+                        padding: 6px;
+                    }
+                    QPushButton {
+                        border: 1px solid black;
+                        border-radius: 4px;
+                        padding: 8px;
+                        color white;           
+                    }
+                    QPushButton:hover {
+                        background-color: black;
+                        color: white;
+                    }
+                    QGroupBox {
+                        font-weight: bold;
+                        border: 1px solid gray;
+                        margin-top: 10px;
+                        padding: 10px;
+                    }
+                    QGroupBox:title {
+                        subcontrol-origin: margin;
+                        padding: 4px;
+                    }
+                """)
 
         # Grid Layout cho các phần
         self.grid_layout = QGridLayout()
-        self.main_layout.addLayout(self.grid_layout)
 
         # Groupbox cho màn hình nhận diện
         self.recognition_group = QGroupBox("Màn hình nhận diện")
-        self.recognition_group.setStyleSheet("""
-                font-size: 13px;
-                background-color: white; border: 1px solid gray;
-                border-radius: 5px;
-                padding-top: -10px;
-                padding: 10px;
-            """)
         self.recognition_layout = QVBoxLayout()
         self.recognition_group.setLayout(self.recognition_layout)
 
@@ -62,12 +84,12 @@ class RecognitionStudentView(QWidget):
         choose_layout.addWidget(self.class_combo)
         choose_layout.addWidget(self.attendance_label)
         choose_layout.addWidget(self.attendance_combo)
+        self.recognition_layout.addLayout(choose_layout)
 
         # Camera feed
         self.camera_feed = QLabel()
         self.camera_feed.setPixmap(QPixmap("../Image/img.png").scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio))
         self.camera_feed.setStyleSheet("border: 1px solid blue; text-align: center;")
-        self.recognition_layout.addLayout(choose_layout)
         self.recognition_layout.addWidget(self.camera_feed)
 
         # Nút mở và đóng camera
@@ -84,24 +106,20 @@ class RecognitionStudentView(QWidget):
         self.grid_layout.addWidget(self.recognition_group, 0, 0)
 
         # Thông tin điểm danh (Phần bên phải)
-        self.infor_content = QWidget(self.main_widget)
+        self.infor_content = QWidget(self)
         self.infor_playout = QVBoxLayout(self.infor_content)
 
         self.attendance_group = QGroupBox("Điểm danh thành công")
         self.attendance_group.setStyleSheet("""
             border: 1px solid gray;
             background-color: white; border-radius: 5px;
-            padding-top: 5px;
+            padding-top: 10px;
             padding-right: 5px;
-            padding-bottom: 5px;""")
+            padding-bottom: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;""")
         self.attendance_layout = QGridLayout()
         self.attendance_group.setLayout(self.attendance_layout)
-
-        # Hiển thị ảnh nhận diện
-        self.detected_face = QLabel()
-        self.detected_face.setPixmap(QPixmap("../Image/img.png").scaled(40, 30, Qt.AspectRatioMode.KeepAspectRatio))
-        self.detected_face.setStyleSheet("border: 1px solid blue; text-align: center;")
-        self.attendance_layout.addWidget(self.detected_face)
 
         self.id_label = QLabel("ID Học sinh:")
         self.id_label.setStyleSheet("border: none")
@@ -149,13 +167,30 @@ class RecognitionStudentView(QWidget):
             background-color: white; border-radius: 5px;
             padding-top: 5px;
             padding-bottom: 5px;""")
-        session_layout = QVBoxLayout()
+        session_layout = QGridLayout()
         session_group.setLayout(session_layout)
 
-        self.class_info = QTextEdit()
-        self.class_info.setStyleSheet("border: none")
-        self.class_info.setText("Lớp: Cấu trúc dữ liệu\nID Buổi học: 5\nThời gian: 7:00:00 - 11:30:00")
-        session_layout.addWidget(self.class_info)
+        self.class_label = QLabel("Lớp:")
+        self.class_label.setStyleSheet("border: none")
+        self.infor_class_input = QLabel("Cấu trúc dữ liệu")
+        self.infor_class_input.setStyleSheet("border: none; color: red")
+
+        self.id_session_label = QLabel("ID buổi học: ")
+        self.id_session_label.setStyleSheet("border: none")
+        self.id_session_input = QLabel("1")
+        self.id_session_input.setStyleSheet("border: none; color: red")
+
+        self.time_label = QLabel("Thời gian")
+        self.time_label.setStyleSheet("border: none")
+        self.time_input = QLabel("7:00:00 - 11:30:00")
+        self.time_input.setStyleSheet("border: none; color: red")
+
+        session_layout.addWidget(self.class_label, 0, 0)
+        session_layout.addWidget(self.infor_class_input, 0, 1)
+        session_layout.addWidget(self.id_session_label, 1, 0)
+        session_layout.addWidget(self.id_session_input, 1, 1)
+        session_layout.addWidget(self.time_label, 2, 0)
+        session_layout.addWidget(self.time_input, 2, 1)
 
         # Thêm groupbox thông tin buổi học vào layout
         self.infor_playout.addWidget(session_group)
@@ -166,6 +201,8 @@ class RecognitionStudentView(QWidget):
         # Đặt tỷ lệ kích thước cho các cột
         self.grid_layout.setColumnStretch(0, 2)  # recognition_group chiếm 2 phần
         self.grid_layout.setColumnStretch(1, 1)  # infor_content chiếm 1 phần
+
+        self.setLayout(self.grid_layout)
 
 
 
