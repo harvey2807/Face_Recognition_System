@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView
+    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QDate
 
 
 class StudentInformationManagement(QWidget):
@@ -23,8 +23,8 @@ class StudentInformationManagement(QWidget):
             QLabel {
                 font-size: 14px;
             }
-            QLineEdit, QComboBox, QTableWidget {
-                border: 1px solid black;
+            QLineEdit, QComboBox, QTableWidget, QDateTimeEdit {
+                border: 1px solid #CCCCCC;
                 border-radius: 4px;
                 padding: 6px;
             }
@@ -77,8 +77,32 @@ class StudentInformationManagement(QWidget):
         self.class_input = QLineEdit()
         self.cmnd_input = QLineEdit()
         self.gender_combo = QComboBox()
-        self.gender_combo.addItems(["Nam", "Nữ"])  # Thêm tùy chọn "Nam" và "Nữ"
-        self.dob_input = QLineEdit()
+        self.gender_combo.addItems(["Nam", "Nữ"])  # Thêm tùy chọn "Nam" và "Nữ
+        self.dob_input = QDateTimeEdit(self, calendarPopup=True)
+        self.dob_input.setDate(QDate.currentDate())  # Ngày mặc định
+        self.dob_input.setDisplayFormat("dd/MM/yyyy")  # Định dạng hiển thị
+
+        calendar = self.dob_input.calendarWidget()
+        calendar.setStyleSheet("""
+            QCalendarWidget QTableView {
+                selection-background-color: lightblue; /* Màu nền khi chọn */
+                selection-color: black; /* Màu chữ khi chọn */
+            }
+
+            QCalendarWidget QTableView::item {
+                color: black; /* Màu chữ mặc định của các ngày */
+                background-color: white; /* Màu nền mặc định của các ngày */
+            }
+
+            QCalendarWidget QHeaderView::section {
+                background-color: #1E90FF; /* Màu nền của hàng thứ */
+                color: white; /* Màu chữ của hàng thứ */
+                font-weight: bold;
+                border: 1px solid #CCCCCC;
+                padding: 5px;
+            }
+        """)
+
         self.email_input = QLineEdit()
         self.phone_input = QLineEdit()
         self.address_input = QLineEdit()
