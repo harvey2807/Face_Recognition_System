@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import (
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from FaceRecognitionSystem.View.AbsentWindow import AbsentWindow
-from FaceRecognitionSystem.View.NoAttendanceWindow import NoAttendanceWindow
+from AbsentWindow import AbsentWindow
+from NoAttendanceWindow import NoAttendanceWindow
 
 class SystemStatistics(QMainWindow):
     def __init__(self, stacked_widget):
