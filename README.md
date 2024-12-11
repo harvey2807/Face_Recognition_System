@@ -24,7 +24,7 @@ Teammate:
   
   Nguyen Thi Ngoc Diem - 22130038
 
-  Phung Khanh Duy - 
+  Phung Khanh Duy - 22130062
 
   Vo Thi Cam Tu - 
   
