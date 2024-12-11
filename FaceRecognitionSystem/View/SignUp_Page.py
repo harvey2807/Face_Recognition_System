@@ -3,13 +3,10 @@ import sys
 from PyQt6.QtCore import Qt, QTimer, QDate, QTime
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, \
-    QLineEdit, QPushButton, QMessageBox
+    QLineEdit, QPushButton, QMessageBox, QDateEdit, QRadioButton
 import MySQLdb as mdb
-from PyQt6.uic import widgetPluginPath
-from PyQt6.uic.Compiler.qtproxies import QtWidgets
 
-
-class LoginView(QWidget):
+class SignUpView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
         self.central_widget = QWidget(self)
@@ -34,7 +31,7 @@ class LoginView(QWidget):
         self.central_widget.setStyleSheet("background-color: lightblue;")
 
         # Tạo panel (QFrame)
-        self.panel.setFixedSize(500, 400)
+        self.panel.setFixedSize(600, 500)
         self.panel.setStyleSheet("""
                    background-color: white;
                    border-radius: 10px;
@@ -45,7 +42,7 @@ class LoginView(QWidget):
         self.main_layout.setAlignment(self.panel, Qt.AlignmentFlag.AlignCenter)
 
         # Create a header panel (QFrame)
-        self.header_panel.setGeometry(0, 0, 500, 50)
+        self.header_panel.setGeometry(0, 0, 600, 50)
         self.header_panel.setStyleSheet("""
             background-color: white;
             border-radius: 10px;
@@ -86,7 +83,7 @@ class LoginView(QWidget):
 
         # Title panel (Centered)
         self.title_panel = QFrame(self.header_panel)
-        self.title_panel.setGeometry(200, 5, 100, 40)
+        self.title_panel.setGeometry(200, 5, 200, 40)
         self.title_panel.setStyleSheet("border: none;")
         title_layout = QHBoxLayout(self.title_panel)
         title_layout.setContentsMargins(0, 0, 0, 0)
@@ -101,7 +98,7 @@ class LoginView(QWidget):
         self.form_widget.setStyleSheet("""
                   background-color: white;
                  """)
-        self.form_widget.setMinimumSize(350, 250)
+        self.form_widget.setMinimumSize(350, 350)
 
         form_layout = QVBoxLayout (self.form_widget)
         # Tạo layout cho main_frame
@@ -116,12 +113,22 @@ class LoginView(QWidget):
         self.password_label = QLabel("Mật khẩu ")
         self.password_label.setStyleSheet("font-size: 15px; font-weight: bold;")
 
+        self.dob_label =QLabel ("Năm sinh: ")
+        self.dob_label.setStyleSheet("font-size: 15px; font-weight: bold;")
+
+        self.gender_label = QLabel("Giới tính: ")
+        self.gender_label.setStyleSheet("font-size: 15px; font-weight: bold;")
+
         self.username_field = QLineEdit()
+        self.dob_field = QDateEdit()
+        self.dob_field.setDate(QDate.currentDate())
+        self.rb_Male = QRadioButton('Male', self)
+        self.rb_Female = QRadioButton('Female', self)
         self.password_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
 
         # Tạo nút Xác nhận
-        self.login_button = QPushButton('Đăng nhập')
-        self.login_button.setStyleSheet("""
+        self.signup_button = QPushButton('Đăng kí')
+        self.signup_button.setStyleSheet("""
               font-size: 15px;
               padding: 10px;
               background-color: white;
@@ -130,34 +137,39 @@ class LoginView(QWidget):
               margin-top: 20px
           """)
 
-        # Tạo nút Đăng ký (Sign up)
-        self.signup_button = QPushButton('Đăng ký')
-        self.signup_button.setStyleSheet("""
-            font-size: 15px;
-            font-style: italic;
-            text-decoration: underline;
-            background: transparent;
-            border: none;
-            padding: 0px;
-        """)
-        self.signup_button.setFixedHeight(40)
-        self.signup_button.setFixedWidth(330)
-
         # Áp dụng hiệu ứng bóng (shadow) cho đăng nhập
-        shadow_effect = QGraphicsDropShadowEffect(self.login_button)
+        shadow_effect = QGraphicsDropShadowEffect(self.signup_button)
         shadow_effect.setBlurRadius(10)
         shadow_effect.setXOffset(5)
         shadow_effect.setYOffset(5)
         shadow_effect.setColor(QColor(0, 0, 0, 50))
-        self.login_button.setGraphicsEffect(shadow_effect)
+        self.signup_button.setGraphicsEffect(shadow_effect)
+
+        # Tạo nút Đăng ký (Sign up)
+        self.goback_button = QPushButton('Quay lại')
+        self.goback_button.setStyleSheet("""
+                    font-size: 15px;
+                    font-style: italic;
+                    text-decoration: underline;
+                    background: transparent;
+                    border: none;
+                    padding: 0px;
+                """)
+        self.goback_button.setFixedHeight(40)
+        self.goback_button.setFixedWidth(330)
 
         # place the widget on the window
         form_layout.addWidget(self.user_label)
         form_layout.addWidget(self.username_field)
         form_layout.addWidget(self.password_label)
         form_layout.addWidget(self.password_field)
-        form_layout.addWidget(self.login_button)
+        form_layout.addWidget(self.dob_label)
+        form_layout.addWidget(self.dob_field)
+        form_layout.addWidget(self.gender_label)
+        form_layout.addWidget(self.rb_Male)
+        form_layout.addWidget(self.rb_Female)
         form_layout.addWidget(self.signup_button)
+        form_layout.addWidget(self.goback_button)
         self.form_widget.setLayout(form_layout)
 
         # Tạo layout cho main_frame và thêm form_widget vào
@@ -171,13 +183,22 @@ class LoginView(QWidget):
         timer.start(1000)
 
         self.update_time()
-        self.login_button.clicked.connect(self.login)
         self.signup_button.clicked.connect(self.sign_up)
+        self.goback_button.clicked.connect(self.go_back_login)
         self.show()
 
-    def login(self):
+    def sign_up(self):
         user = self.username_field.text()
         pwd = self.password_field.text()
+        dob = str(self.dob_field.date().toPyDate())
+
+        # Kiểm tra giới tính đã chọn
+        gender = None
+        if self.rb_Male.isChecked():
+            gender = 'male'
+        elif self.rb_Female.isChecked():
+            gender = 'female'
+
         # Kết nối cơ sở dữ liệu
         db = mdb.connect(
             host='localhost',
@@ -190,13 +211,19 @@ class LoginView(QWidget):
         cursor.execute(query, (user, pwd))
         kt = cursor.fetchone()
         if kt:
-            QMessageBox.information(self, "Login output", "Login success")
-            self.stacked_widget.setCurrentIndex(1)
+            QMessageBox.information(self, "Signup output", "Account already exists")
+            self.reset_form()
         else:
-            QMessageBox.information(self, "Login error", "Login fail!")
+            QMessageBox.information(self, "Signup output", "Account already exists")
+            query = "INSERT INTO teachers(name, dob, tpassword, gender) values (%s,%s,%s,%s)"
+            cursor.execute(query, (user, dob, pwd, gender))
+            db.commit()
+            QMessageBox.information(self, "Signup output", "Signup success")
 
-    def sign_up(self):
-        self.stacked_widget.setCurrentIndex(1)
+
+    def go_back_login(self):
+        print("dang nhập")
+        self.stacked_widget.setCurrentIndex(0)
 
     def update_time(self):
         # Get current time and date
@@ -207,4 +234,9 @@ class LoginView(QWidget):
         self.time_label.setText(current_time)
         self.date_label.setText(current_date)
 
-
+    def reset_form(self):
+        self.username_field.clear()
+        self.password_field.clear()
+        self.dob_field.setDate(QDate.currentDate())
+        self.rb_Male.setChecked(False)
+        self.rb_Female.setChecked(False)
