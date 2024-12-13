@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import MySQLdb as mdb
-from AbsentWindow import AbsentWindow
+from AttendanceWindow import AttendanceWindow
 from NoAttendanceWindow import NoAttendanceWindow
 
 class SystemStatistics(QMainWindow):
@@ -28,7 +28,7 @@ class SystemStatistics(QMainWindow):
         tab_widget.clear()  # Xóa các tab cũ
         tab_widget.addTab(self.create_statistics_tab(), "Thống kê")
         tab_widget.addTab(self.create_no_attendance_tab(), "Học sinh vắng")
-        tab_widget.addTab(self.create_absent_tab(), "Học sinh đã điểm danh")
+        tab_widget.addTab(self.create_attendance_tab(), "Học sinh đã điểm danh")
 
         # Thêm QTabWidget vào layout chính
         main_layout.addWidget(tab_widget)
@@ -51,17 +51,17 @@ class SystemStatistics(QMainWindow):
         return statistics_tab
 
 
-    def create_absent_tab(self):
-        """Tạo tab cho học sinh vắng"""
-        absent_tab = QWidget()
+    def create_attendance_tab(self):
+        """Tạo tab cho học sinh có điểm danh"""
+        attendance_tab = QWidget()
         layout = QVBoxLayout()
 
         # Tạo đối tượng AbsentWindow và thêm vào layout
-        self.absent_window_widget = AbsentWindow()  # Đảm bảo rằng AbsentWindow là một QWidget hoặc kế thừa QWidget
-        layout.addWidget(self.absent_window_widget)
+        self.attendance_window_widget = AttendanceWindow()  # Đảm bảo rằng AbsentWindow là một QWidget hoặc kế thừa QWidget
+        layout.addWidget(self.attendance_window_widget)
 
-        absent_tab.setLayout(layout)
-        return absent_tab
+        attendance_tab.setLayout(layout)
+        return attendance_tab
 
     def create_no_attendance_tab(self):
         """Tạo tab cho học sinh đã điểm danh"""
@@ -107,7 +107,7 @@ class SystemStatistics(QMainWindow):
         db = mdb.connect(
             host='localhost',
             user='root',
-            passwd='',  # Thay bằng mật khẩu của bạn
+            passwd='',
             db="facerecognitionsystem"
         )
         cursor = db.cursor()
@@ -144,13 +144,21 @@ class SystemStatistics(QMainWindow):
         # data3 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         # tong_so_lop = len(data3)  # Tổng số lớp
 
+        query4 = """
+            SELECT CId, nameC
+            FROM classes
+        """
+        cursor.execute(query4)
+        data4 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
+        class_names = {row[0]: row[1] for row in data4}  # Tạo dictionary với CId là khóa và tên lớp là giá trị
+
         # Đóng kết nối
         cursor.close()
         db.close()
 
 
         # Dữ liệu cho biểu đồ
-        x = [str(c) for c in hoc_sinh_co_diem_danh.keys()]  # Sử dụng CId làm trục X
+        x = [class_names.get(c, str(c)) for c in hoc_sinh_co_diem_danh.keys()]  # Sử dụng tên buổi làm trục X
         # dd = [tong_so_lop] * len(x)  # Số bản điểm danh (tổng số lớp)
         sumst = [hoc_sinh_co_diem_danh.get(c, 0) for c in hoc_sinh_co_diem_danh.keys()]  # Số học sinh điểm danh
         miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]  # Số học sinh vắng
@@ -162,16 +170,14 @@ class SystemStatistics(QMainWindow):
 
         # Hiển thị giá trị lên các điểm dữ liệu
         # for i, value in enumerate(sumst):
-        #     ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        #     ax.text(i, value + 2, f"{value}", color="#0E131F", fontsize=9, ha="center", va="bottom")
         # for i, value in enumerate(miss):
-        #     ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
-        # for i, value in enumerate(dd):
-        #     ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        #     ax.text(i, value + 2, f"{value}", color="#0E131F", fontsize=9, ha="center", va="bottom")
 
         # Cài đặt tiêu đề, trục và phong cách
-        ax.set_title("Thống kê học sinh theo lớp", fontsize=18, fontweight="bold", color="#0E131F", pad=20)
+        ax.set_title("Thống kê học sinh theo buổi học", fontsize=18, fontweight="bold", color="#0E131F", pad=20)
         ax.set_ylabel("Số học sinh", fontsize=12, color="#0E131F", labelpad=10)
-        ax.set_xlabel("Lớp học", fontsize=12, color="#0E131F", labelpad=10)
+        ax.set_xlabel("Buổi", fontsize=12, color="#0E131F", labelpad=10)
         ax.tick_params(axis="both", colors="#0E131F", labelsize=10)
         ax.legend(loc="upper right", fontsize=10, facecolor="#4a4a4a", edgecolor="none", labelcolor="white")
 

@@ -6,11 +6,11 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 import MySQLdb as mdb
 
-class NoAttendanceWindow(BaseTableWindow):
+class AttendanceWindow(BaseTableWindow):
     def __init__(self):
-        super().__init__("Học sinh không điểm danh")
+        super().__init__("Học sinh có điểm danh")
 
-        # Kết nối đến cơ sở dữ liệu
+    # Kết nối đến cơ sở dữ liệu
         db = mdb.connect(
             host='localhost',
             user='root',
@@ -22,12 +22,8 @@ class NoAttendanceWindow(BaseTableWindow):
         # Truy vấn dữ liệu
         query = """
         SELECT s.SId, s.nameSt, c.nameC, c.dateC
-        FROM classes c
-        LEFT JOIN students s 
-            ON s.SId NOT IN (
-                SELECT SId FROM studentsofclass WHERE CId = c.CId
-            )
-        WHERE s.SId IS NOT NULL
+        FROM studentsofclass sc JOIN students s ON sc.SId = s.SId
+        JOIN classes c ON c.CId = sc.CId
         ORDER BY s.SId ASC
         """
         cursor.execute(query)
