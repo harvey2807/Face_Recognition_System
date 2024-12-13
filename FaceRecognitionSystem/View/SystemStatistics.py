@@ -177,7 +177,7 @@ class SystemStatistics(QMainWindow):
         # Cài đặt tiêu đề, trục và phong cách
         ax.set_title("Thống kê học sinh theo buổi học", fontsize=18, fontweight="bold", color="#0E131F", pad=20)
         ax.set_ylabel("Số học sinh", fontsize=12, color="#0E131F", labelpad=10)
-        ax.set_xlabel("Lớp học", fontsize=12, color="#0E131F", labelpad=10)
+        ax.set_xlabel("Buổi", fontsize=12, color="#0E131F", labelpad=10)
         ax.tick_params(axis="both", colors="#0E131F", labelsize=10)
         ax.legend(loc="upper right", fontsize=10, facecolor="#4a4a4a", edgecolor="none", labelcolor="white")
 

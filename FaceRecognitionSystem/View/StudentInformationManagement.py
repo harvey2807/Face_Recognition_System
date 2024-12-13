@@ -75,7 +75,7 @@ class StudentInformationManagement(QWidget):
         self.id_input = QLineEdit()
         self.name_input = QLineEdit()
         self.class_input = QLineEdit()
-        self.cmnd_input = QLineEdit()
+        self.cccd_input = QLineEdit()
         self.gender_combo = QComboBox()
         self.gender_combo.addItems(["Nam", "Nữ"])  # Thêm tùy chọn "Nam" và "Nữ
         self.dob_input = QDateTimeEdit(self, calendarPopup=True)
@@ -115,7 +115,7 @@ class StudentInformationManagement(QWidget):
         student_layout.addWidget(QLabel("Lớp học:"), 2, 0)
         student_layout.addWidget(self.class_input, 2, 1)
         student_layout.addWidget(QLabel("CCCD:"), 2, 2)
-        student_layout.addWidget(self.cmnd_input, 2, 3)
+        student_layout.addWidget(self.cccd_input, 2, 3)
         student_layout.addWidget(QLabel("Giới tính:"), 3, 0)
         student_layout.addWidget(self.gender_combo, 3, 1)
         student_layout.addWidget(QLabel("Ngày sinh:"), 3, 2)
@@ -153,7 +153,7 @@ class StudentInformationManagement(QWidget):
         self.search_button = QPushButton("Tìm kiếm")
         self.view_all_button = QPushButton("Xem tất cả")
         self.table = QTableWidget(5, 3)  # Bảng chứa kết quả tìm kiếm
-        self.table.setHorizontalHeaderLabels(["ID Học sinh", "Họ tên", "CMND"])  # Đặt tên các cột
+        self.table.setHorizontalHeaderLabels(["ID Học sinh", "Họ tên", "CCCD"])  # Đặt tên các cột
 
         # Điều chỉnh kích thước các cột trong bảng
         header = self.table.horizontalHeader()

@@ -27,8 +27,8 @@ class NoAttendanceWindow(BaseTableWindow):
             ON s.SId NOT IN (
                 SELECT SId FROM studentsofclass WHERE CId = c.CId
             )
-        WHERE s.SId IS NOT NULL;
-
+        WHERE s.SId IS NOT NULL
+        ORDER BY s.SId ASC
         """
         cursor.execute(query)
         data = cursor.fetchall()

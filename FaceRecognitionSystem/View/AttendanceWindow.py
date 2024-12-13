@@ -24,6 +24,7 @@ class AttendanceWindow(BaseTableWindow):
         SELECT s.SId, s.nameSt, c.nameC, c.dateC
         FROM studentsofclass sc JOIN students s ON sc.SId = s.SId
         JOIN classes c ON c.CId = sc.CId
+        ORDER BY s.SId ASC
         """
         cursor.execute(query)
         data = cursor.fetchall()
