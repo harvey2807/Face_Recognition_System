@@ -54,7 +54,7 @@ class StudentInformationManagement(QWidget):
         outer_layout = QVBoxLayout()
 
         # Tiêu đề chính
-        header_label = QLabel("Thống kê hệ thống")
+        header_label = QLabel("Quản lý thông tin Học sinh")
         header_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)  # Căn giữa tiêu đề
         header_label.setStyleSheet(
             "font-size: 24px; font-weight: bold; color: black; margin: 0px; padding: 0px;"
@@ -114,7 +114,7 @@ class StudentInformationManagement(QWidget):
         student_layout.addWidget(self.name_input, 1, 3)
         student_layout.addWidget(QLabel("Lớp học:"), 2, 0)
         student_layout.addWidget(self.class_input, 2, 1)
-        student_layout.addWidget(QLabel("CMND:"), 2, 2)
+        student_layout.addWidget(QLabel("CCCD:"), 2, 2)
         student_layout.addWidget(self.cmnd_input, 2, 3)
         student_layout.addWidget(QLabel("Giới tính:"), 3, 0)
         student_layout.addWidget(self.gender_combo, 3, 1)
