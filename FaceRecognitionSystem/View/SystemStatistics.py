@@ -5,8 +5,8 @@ from PyQt6.QtWidgets import (
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
-from AbsentWindow import AbsentWindow
+import MySQLdb as mdb
+from AttendanceWindow import AttendanceWindow
 from NoAttendanceWindow import NoAttendanceWindow
 
 class SystemStatistics(QMainWindow):
@@ -28,7 +28,7 @@ class SystemStatistics(QMainWindow):
         tab_widget.clear()  # Xóa các tab cũ
         tab_widget.addTab(self.create_statistics_tab(), "Thống kê")
         tab_widget.addTab(self.create_no_attendance_tab(), "Học sinh vắng")
-        tab_widget.addTab(self.create_absent_tab(), "Học sinh đã điểm danh")
+        tab_widget.addTab(self.create_attendance_tab(), "Học sinh đã điểm danh")
 
         # Thêm QTabWidget vào layout chính
         main_layout.addWidget(tab_widget)
@@ -51,17 +51,17 @@ class SystemStatistics(QMainWindow):
         return statistics_tab
 
 
-    def create_absent_tab(self):
-        """Tạo tab cho học sinh vắng"""
-        absent_tab = QWidget()
+    def create_attendance_tab(self):
+        """Tạo tab cho học sinh có điểm danh"""
+        attendance_tab = QWidget()
         layout = QVBoxLayout()
 
         # Tạo đối tượng AbsentWindow và thêm vào layout
-        self.absent_window_widget = AbsentWindow()  # Đảm bảo rằng AbsentWindow là một QWidget hoặc kế thừa QWidget
-        layout.addWidget(self.absent_window_widget)
+        self.attendance_window_widget = AttendanceWindow()  # Đảm bảo rằng AbsentWindow là một QWidget hoặc kế thừa QWidget
+        layout.addWidget(self.attendance_window_widget)
 
-        absent_tab.setLayout(layout)
-        return absent_tab
+        attendance_tab.setLayout(layout)
+        return attendance_tab
 
     def create_no_attendance_tab(self):
         """Tạo tab cho học sinh đã điểm danh"""
@@ -98,41 +98,93 @@ class SystemStatistics(QMainWindow):
         return chart_container  # Trả về container chứa biểu đồ
 
     def create_area_chart(self):
-        """Tạo biểu đồ dạng vùng (area chart) với phong cách mềm mại."""
+        # Tạo biểu đồ dạng vùng (area chart) với dữ liệu từ database.
         # Tạo đối tượng Figure từ matplotlib
         figure = Figure(figsize=(10, 6))
         ax = figure.add_subplot(111)
 
-        # Dữ liệu mẫu
-        x = ["Buổi 1", "Buổi2", "Buổi 3", "Buổi 4", "Buổi 5"]
-        sumst = [10, 30, 25, 20, 15]  # Tổng số học sinh
-        miss = [15, 25, 20, 30, 10]   # Số lần vắng
-        dd = [40, 15, 10, 25, 20]     # Số bản điểm danh
+        # Kết nối đến cơ sở dữ liệu
+        db = mdb.connect(
+            host='localhost',
+            user='root',
+            passwd='',
+            db="facerecognitionsystem"
+        )
+        cursor = db.cursor()
+
+        # Truy vấn số học sinh đã điểm danh cho mỗi lớp
+        query1 = """
+            SELECT CId, COUNT(SId) AS HocSinhCoDiemDanh
+            FROM studentsofclass
+            GROUP BY CId;
+        """
+        cursor.execute(query1)
+        data1 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
+        hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}  # Tạo dictionary với CId là khóa và số học sinh điểm danh là giá trị
+
+        # Truy vấn số học sinh vắng cho mỗi lớp
+        query2 = """
+            SELECT sc.CId, 
+            (SELECT COUNT(*) 
+            FROM students s 
+            WHERE s.SId NOT IN (SELECT SId FROM studentsofclass WHERE CId = sc.CId)
+            ) AS SoHocSinhVang
+            FROM classes sc;
+        """
+        cursor.execute(query2)
+        data2 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
+        hoc_sinh_vang = {row[0]: row[1] for row in data2}  # Tạo dictionary với CId là khóa và số học sinh vắng là giá trị
+
+        # # Truy vấn tổng số lớp
+        # query3 = """
+        #     SELECT DISTINCT CId
+        #     FROM studentsofclass
+        # """
+        # cursor.execute(query3)
+        # data3 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
+        # tong_so_lop = len(data3)  # Tổng số lớp
+
+        query4 = """
+            SELECT CId, nameC
+            FROM classes
+        """
+        cursor.execute(query4)
+        data4 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
+        class_names = {row[0]: row[1] for row in data4}  # Tạo dictionary với CId là khóa và tên lớp là giá trị
+
+        # Đóng kết nối
+        cursor.close()
+        db.close()
+
+
+        # Dữ liệu cho biểu đồ
+        x = [class_names.get(c, str(c)) for c in hoc_sinh_co_diem_danh.keys()]  # Sử dụng tên buổi làm trục X
+        # dd = [tong_so_lop] * len(x)  # Số bản điểm danh (tổng số lớp)
+        sumst = [hoc_sinh_co_diem_danh.get(c, 0) for c in hoc_sinh_co_diem_danh.keys()]  # Số học sinh điểm danh
+        miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]  # Số học sinh vắng
 
         # Vẽ biểu đồ dạng vùng
-        ax.fill_between(x, sumst, color="#F8E71C", alpha=0.7, label="Số học sinh")
-        ax.fill_between(x, miss, color="#F5A623", alpha=0.7, label="Số lần vắng")
-        ax.fill_between(x, dd, color="#80B354", alpha=0.7, label="Số bản điểm danh")
+        ax.fill_between(x, sumst, color="#F29CA3", alpha=0.7, label="Số học sinh điểm danh")
+        ax.fill_between(x, miss, color="#64113F", alpha=0.7, label="Số học sinh vắng")
+        # ax.fill_between(x, dd, color="#F8E71C", alpha=0.7, label="Số lớp")
 
         # Hiển thị giá trị lên các điểm dữ liệu
-        for i, value in enumerate(sumst):
-            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
-        for i, value in enumerate(miss):
-            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
-        for i, value in enumerate(dd):
-            ax.text(i, value + 2, f"{value}", color="#ffffff", fontsize=9, ha="center", va="bottom")
+        # for i, value in enumerate(sumst):
+        #     ax.text(i, value + 2, f"{value}", color="#0E131F", fontsize=9, ha="center", va="bottom")
+        # for i, value in enumerate(miss):
+        #     ax.text(i, value + 2, f"{value}", color="#0E131F", fontsize=9, ha="center", va="bottom")
 
         # Cài đặt tiêu đề, trục và phong cách
-        ax.set_title("Thống kê hệ thống", fontsize=18, fontweight="bold", color="#ffffff", pad=20)
-        ax.set_ylabel("Số lần", fontsize=12, color="#ffffff", labelpad=10)
-        ax.set_xlabel("Buổi", fontsize=12, color="#ffffff", labelpad=10)
-        ax.tick_params(axis="both", colors="#ffffff", labelsize=10)
+        ax.set_title("Thống kê học sinh theo buổi học", fontsize=18, fontweight="bold", color="#0E131F", pad=20)
+        ax.set_ylabel("Số học sinh", fontsize=12, color="#0E131F", labelpad=10)
+        ax.set_xlabel("Buổi", fontsize=12, color="#0E131F", labelpad=10)
+        ax.tick_params(axis="both", colors="#0E131F", labelsize=10)
         ax.legend(loc="upper right", fontsize=10, facecolor="#4a4a4a", edgecolor="none", labelcolor="white")
 
         # Cài đặt nền và lưới
-        ax.set_facecolor("#838CC7")  # Nền cho biểu đồ
-        figure.set_facecolor("#838CC7")  # Nền cho toàn bộ figure
-        ax.grid(color="#ffffff", linestyle="--", linewidth=0.5, alpha=0.3)
+        ax.set_facecolor("#ffffff")  # Nền cho biểu đồ
+        figure.set_facecolor("#ffffff")  # Nền cho toàn bộ figure
+        ax.grid(color="#0E131F", linestyle="--", linewidth=0.5, alpha=0.3)
 
         # Căn chỉnh khoảng cách và bo góc
         figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, right=0.9)
@@ -140,5 +192,3 @@ class SystemStatistics(QMainWindow):
         # Nhúng biểu đồ vào PyQt
         canvas = FigureCanvas(figure)
         return canvas
-
-

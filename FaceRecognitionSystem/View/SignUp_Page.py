@@ -207,7 +207,7 @@ class SignUpView(QWidget):
             db='facerecognitionsystem'
         )
         cursor = db.cursor()
-        query = "SELECT * FROM teachers WHERE name = %s AND tpassword = %s"
+        query = "SELECT * FROM teachers WHERE nameTc = %s AND tpassword = %s"
         cursor.execute(query, (user, pwd))
         kt = cursor.fetchone()
         if kt:
@@ -215,7 +215,7 @@ class SignUpView(QWidget):
             self.reset_form()
         else:
             QMessageBox.information(self, "Signup output", "Account already exists")
-            query = "INSERT INTO teachers(name, dob, tpassword, gender) values (%s,%s,%s,%s)"
+            query = "INSERT INTO teachers(nameTc, dob, tpassword, gender) values (%s,%s,%s,%s)"
             cursor.execute(query, (user, dob, pwd, gender))
             db.commit()
             QMessageBox.information(self, "Signup output", "Signup success")
