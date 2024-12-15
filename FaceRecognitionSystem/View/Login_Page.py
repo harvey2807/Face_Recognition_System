@@ -186,7 +186,7 @@ class LoginView(QWidget):
             db='facerecognitionsystem'
         )
         cursor = db.cursor()
-        query = "SELECT * FROM teachers WHERE name = %s AND tpassword = %s"
+        query = "SELECT * FROM teachers WHERE nameTc = %s AND tpassword = %s"
         cursor.execute(query, (user, pwd))
         kt = cursor.fetchone()
         if kt:
