@@ -1,9 +1,10 @@
 import sys
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QComboBox, QPushButton, QLineEdit, \
     QGridLayout, QTextEdit
+import cv2
 
 
 class RecognitionStudentView(QWidget):
@@ -88,16 +89,28 @@ class RecognitionStudentView(QWidget):
 
         # Camera feed
         self.camera_feed = QLabel()
-        self.camera_feed.setPixmap(QPixmap("../Image/img.png").scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio))
-        self.camera_feed.setStyleSheet("border: 1px solid blue; text-align: center;")
-        self.recognition_layout.addWidget(self.camera_feed)
+        self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.camera_feed.setPixmap(QPixmap("../Image/img.png").scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio))
+        # self.camera_feed.setStyleSheet("border: 1px solid blue; text-align: center;")
+        self.camera_feed.setFixedSize(700,360)
+        self.recognition_layout.addWidget(self.camera_feed, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Khởi tạo camera và timer
+        self.camera = None
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_frame)
+        self.is_camera_active = False
 
         # Nút mở và đóng camera
         camera_buttons_layout = QHBoxLayout()
         self.open_camera_btn = QPushButton("Mở Camera")
         self.open_camera_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
+        self.open_camera_btn.clicked.connect(self.toggle_camera)
+
         self.close_camera_btn = QPushButton("Đóng Camera")
         self.close_camera_btn.setStyleSheet("background-color: #F44336; color: white; padding: 10px;")
+        self.close_camera_btn.clicked.connect(self.toggle_camera)
+
         camera_buttons_layout.addWidget(self.open_camera_btn)
         camera_buttons_layout.addWidget(self.close_camera_btn)
         self.recognition_layout.addLayout(camera_buttons_layout)
@@ -203,6 +216,41 @@ class RecognitionStudentView(QWidget):
         self.grid_layout.setColumnStretch(1, 1)  # infor_content chiếm 1 phần
 
         self.setLayout(self.grid_layout)
+
+
+    def toggle_camera(self):
+        if not self.is_camera_active:
+            # Bật camera
+            self.camera = cv2.VideoCapture(0)  # 0 là camera mặc định
+            if not self.camera.isOpened():
+                self.camera_feed.setText("Không thể mở camera")
+                return
+            self.is_camera_active = True
+            self.timer.start(30)  # Cập nhật khung hình mỗi 30ms
+        else:
+            # Tắt camera
+            self.timer.stop()
+            if self.camera:
+                self.camera.release()
+            self.camera_feed.clear()
+            self.is_camera_active = False
+
+    def update_frame(self):
+        ret, frame = self.camera.read()
+        if ret:
+            # Chuyển đổi khung hình từ BGR (OpenCV) sang RGB (Qt)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            height, width, channel = frame.shape
+            step = channel * width
+            q_image = QImage(frame.data, width, height, step, QImage.Format.Format_RGB888)
+            # Hiển thị khung hình lên QLabel
+            self.camera_feed.setPixmap(QPixmap.fromImage(q_image))
+
+    def closeEvent(self, event):
+        # Giải phóng tài nguyên khi đóng cửa sổ
+        if self.camera:
+            self.camera.release()
+        event.accept()
 
 
 

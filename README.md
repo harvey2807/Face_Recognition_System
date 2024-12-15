@@ -25,7 +25,9 @@ Link dataset: https://drive.google.com/drive/folders/186b81JOettrzb-Re14NRwW0HQj
 
 Teammate:
   Dang Tran Tan Luc - 22130158 (Leader)
-  
+
+  Phùng Khánh Duy - 22130062 
+
   Nguyen Thi Ngoc Diem - 22130038
 
   Phung Khanh Duy - 22130062
