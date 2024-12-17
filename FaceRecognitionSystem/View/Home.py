@@ -10,7 +10,7 @@ from StudentInformationManagement import StudentInformationManagement
 from SystemStatistics import SystemStatistics
 from Profile import ProfileView
 from RecognitionStudent import RecognitionStudentView
-
+from ResetPassword import ResetPasswordView
 
 class HomeView(QWidget):
     def __init__(self):
@@ -106,11 +106,13 @@ class HomeView(QWidget):
         self.RecognitionStudent_page = RecognitionStudentView(self)
         self.StudentInformationManagement = StudentInformationManagement(self)
         self.SystemStatistics = SystemStatistics(self)
+        self.Resetpassword_page = ResetPasswordView(self)
 
         self.tab.addTab(self.SystemStatistics, 'Thống kê')
         self.tab.addTab(self.StudentInformationManagement, 'Quản lí')
         self.tab.addTab(self.RecognitionStudent_page, 'Nhận diện')
         self.tab.addTab(self.Profile_page, 'Thông tin')
+        self.tab.addTab(self.Resetpassword_page, 'Đổi mật khẩu')
 
         # Thêm QTabWidget vào layout chính
         self.main_layout.addWidget(self.tab)

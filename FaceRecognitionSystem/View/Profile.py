@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, Q
     QGraphicsDropShadowEffect, QLineEdit, QDateEdit, QGroupBox, QRadioButton, QMessageBox
 import MySQLdb as mdb
 
+
 class ProfileView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
@@ -111,19 +112,6 @@ class ProfileView(QWidget):
         self.update_button.setGraphicsEffect(shadow_effect)
         self.update_button.clicked.connect(self.update)
 
-        # Tạo nút Đổi mật khẩu (resetpwd)
-        self.resetpwd_button = QPushButton('Đổi mật khẩu')
-        self.resetpwd_button.setStyleSheet("""
-                    font-size: 15px;
-                    font-style: italic;
-                    text-decoration: underline;
-                    background: transparent;
-                    border: none;
-                    margin-left: 10px;
-                """)
-        self.resetpwd_button.setFixedHeight(40)
-        self.resetpwd_button.setFixedWidth(330)
-
         # Thêm vào bố cục
         form_layout.addWidget(self.user_label)
         form_layout.addWidget(self.username_field)
@@ -132,8 +120,6 @@ class ProfileView(QWidget):
         form_layout.addWidget(self.gender_label)
         form_layout.addWidget(gender_group)
         form_layout.addWidget(self.update_button)
-        form_layout.addWidget(self.resetpwd_button)
-
         self.form_widget.setLayout(form_layout)
 
         # Main layout
