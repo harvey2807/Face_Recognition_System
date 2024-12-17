@@ -9,11 +9,16 @@ class ProfileView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
+        self.username = ''
+        self.dob = ''
+        self.gender = ''
         self.setStyleSheet("color: black")
         self.loaddata()
         self.init_form_ui()
+
     def loaddata(self):
         # Kết nối cơ sở dữ liệu
+        username = "PhamVanTinh"
         db = mdb.connect(
             host='localhost',
             user='root',
@@ -21,19 +26,25 @@ class ProfileView(QWidget):
             db='facerecognitionsystem'
         )
         cursor = db.cursor()
-        query = "SELECT nameTc, FROM teachers WHERE nameTc = %s"
-        cursor.execute(query, (user))
-        cursor.fetchone()
-        data = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        pwd = data.row[1]
+        query = "SELECT * FROM teachers WHERE nameTc = %s"
+        cursor.execute(query, (username,))
+        data = cursor.fetchone()
 
-def init_form_ui(self):
+        if data:
+            self.username = data[1]
+            dob_date = data[2]
+            self.gender = data[4]
+            self.dob = QDate(dob_date.year, dob_date.month, dob_date.day)
+        else:
+            print("Không tìm thấy dữ liệu.")
+
+    def init_form_ui(self):
         # Tạo form
         self.form_widget = QWidget()
         self.form_widget.setStyleSheet("""
-                  background-color: white;
-                  padding: 10px;
-              """)
+                     background-color: white;
+                     padding: 10px;
+                 """)
         self.form_widget.setMinimumSize(400, 400)
 
         form_layout = QVBoxLayout(self.form_widget)
@@ -44,34 +55,27 @@ def init_form_ui(self):
 
         self.username_field = QLineEdit()
         self.username_field.setStyleSheet("""
-            border: 1px solid #cccccc; 
-            border-radius: 5px;  /* Tùy chọn bo góc */
-            padding: 5px;
-            font-size: 14px;
-        """)
-
-        self.password_label = QLabel("Mật khẩu ")
-        self.password_label.setStyleSheet("font-size: 15px; font-weight: bold; ")
-        self.password_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
-        self.password_field.setStyleSheet("""
-            border: 1px solid #cccccc; 
-            border-radius: 5px; 
-            padding: 5px;
-            font-size: 14px;
-        """)
+               border: 1px solid #cccccc; 
+               border-radius: 5px;  /* Tùy chọn bo góc */
+               padding: 5px;
+               font-size: 14px;
+           """)
+        self.username_field.setText(self.username)
+        print(self.username)
 
         self.dob_label = QLabel("Năm sinh: ")
         self.dob_label.setStyleSheet("font-size: 15px; font-weight: bold;")
         self.dob_field = QDateEdit()
         self.dob_field.setStyleSheet("""
-            border: 1px solid #cccccc; 
-            border-radius: 5px;
-            padding: 5px;
-            font-size: 14px;
-        """)
+               border: 1px solid #cccccc; 
+               border-radius: 5px;
+               padding: 5px;
+               font-size: 14px;
+           """)
         self.dob_field.setDate(QDate.currentDate())
         self.dob_field.setMinimumDate(QDate(1900, 1, 1))
         self.dob_field.setMaximumDate(QDate.currentDate())
+        self.dob_field.setDate(self.dob)
 
         self.gender_label = QLabel("Giới tính: ")
         self.gender_label.setStyleSheet("font-size: 15px; font-weight: bold;")
@@ -83,17 +87,21 @@ def init_form_ui(self):
         gender_layout.addWidget(self.rb_Male)
         gender_layout.addWidget(self.rb_Female)
         gender_group.setLayout(gender_layout)
+        if self.gender.lower() == 'male':
+            self.rb_Male.setChecked(True)
+        elif self.gender.lower() == 'female':
+            self.rb_Female.setChecked(True)
 
         # Nút bấm
         self.update_button = QPushButton('Cập nhật')
         self.update_button.setStyleSheet("""
-                      font-size: 15px;
-                      padding: 10px;
-                      background-color: white;
-                      border-radius: 10px;
-                      border: 3px solid #FFCD99;
-                      margin-top: 20px;
-                  """)
+                         font-size: 15px;
+                         padding: 10px;
+                         background-color: white;
+                         border-radius: 10px;
+                         border: 3px solid #FFCD99;
+                         margin-top: 20px;
+                     """)
 
         shadow_effect = QGraphicsDropShadowEffect()
         shadow_effect.setBlurRadius(10)
@@ -101,17 +109,30 @@ def init_form_ui(self):
         shadow_effect.setYOffset(5)
         shadow_effect.setColor(QColor(0, 0, 0, 50))
         self.update_button.setGraphicsEffect(shadow_effect)
+        self.update_button.clicked.connect(self.update)
+
+        # Tạo nút Đổi mật khẩu (resetpwd)
+        self.resetpwd_button = QPushButton('Đổi mật khẩu')
+        self.resetpwd_button.setStyleSheet("""
+                    font-size: 15px;
+                    font-style: italic;
+                    text-decoration: underline;
+                    background: transparent;
+                    border: none;
+                    margin-left: 10px;
+                """)
+        self.resetpwd_button.setFixedHeight(40)
+        self.resetpwd_button.setFixedWidth(330)
 
         # Thêm vào bố cục
         form_layout.addWidget(self.user_label)
         form_layout.addWidget(self.username_field)
-        form_layout.addWidget(self.password_label)
-        form_layout.addWidget(self.password_field)
         form_layout.addWidget(self.dob_label)
         form_layout.addWidget(self.dob_field)
         form_layout.addWidget(self.gender_label)
         form_layout.addWidget(gender_group)
         form_layout.addWidget(self.update_button)
+        form_layout.addWidget(self.resetpwd_button)
 
         self.form_widget.setLayout(form_layout)
 
@@ -120,5 +141,52 @@ def init_form_ui(self):
         login_layout.addWidget(self.form_widget)
         login_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
 
-    def go_to_recognitionView(self):
-        self.stacked_widget.setCurrentIndex(2)
+    def update(self):
+        # Kết nối cơ sở dữ liệu
+        db = mdb.connect(
+            host='localhost',
+            user='root',
+            passwd='',
+            db='facerecognitionsystem'
+        )
+        cursor = db.cursor()
+
+        # Lấy dữ liệu từ form
+        new_username = self.username_field.text()
+        new_dob = self.dob_field.date().toString("yyyy-MM-dd")
+        new_gender = "Male" if self.rb_Male.isChecked() else "Female"
+
+        # Kiểm tra sự thay đổi
+        is_changed = False
+
+        # Kiểm tra từng trường
+        if new_username != self.username:
+            is_changed = True
+        if new_dob != self.dob:
+            is_changed = True
+        if new_gender != self.gender:
+            is_changed = True
+
+        # Nếu không có gì thay đổi
+        if not is_changed:
+            QMessageBox.information(self, "Update", "No changes were made.")
+            cursor.close()
+            db.close()
+            return
+        else:
+            # Câu lệnh SQL để cập nhật dữ liệu
+            query = """UPDATE teachers SET nameTc = %s, dob = %s, gender = %s WHERE nameTc = %s"""
+            values = (new_username, new_dob, new_gender, self.username)
+
+            try:
+                cursor.execute(query, values)
+                db.commit()
+                print("Cập nhật thành công!")
+                QMessageBox.information(self, "Update information", "Update sucess!")
+            except Exception as e:
+                print(f"Lỗi khi cập nhật: {e}")
+                QMessageBox.information(self, "Update information", "Update failed!")
+
+            cursor.close()
+            db.close()
+
