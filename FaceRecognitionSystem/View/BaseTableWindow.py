@@ -6,6 +6,7 @@ from PyQt6.QtCore import Qt
 import sys
 import openpyxl  # Thêm thư viện openpyxl để xuất dữ liệu ra Excel
 from openpyxl import Workbook
+
 class BaseTableWindow(QWidget):
     def __init__(self, title):
         super().__init__()

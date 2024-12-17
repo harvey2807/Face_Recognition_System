@@ -2,13 +2,12 @@ import sys
 from PyQt6.QtCore import  Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, \
-    QGraphicsDropShadowEffect, QLineEdit
-
+    QGraphicsDropShadowEffect, QLineEdit, QMessageBox
+import MySQLdb as mdb
 
 class ResetPasswordView(QWidget):
-    def __init__(self, stacked_widget):
+    def __init__(self,stacked_widget):
         super().__init__()
-        self.stacked_widget = stacked_widget
         self.setStyleSheet("color: black")
         self.init_ui()
 
@@ -26,10 +25,6 @@ class ResetPasswordView(QWidget):
         resetpw_layout.addWidget(self.form_widget)
         resetpw_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
 
-        # Tạo các trường nhập liệu
-        self.user_label = QLabel("Tài khoản")
-        self.user_label.setStyleSheet("font-size: 15px; font-weight: bold;")
-
         self.password_old_label = QLabel("Mật khẩu cũ")
         self.password_old_label.setStyleSheet("font-size: 15px; font-weight: bold;")
 
@@ -39,14 +34,6 @@ class ResetPasswordView(QWidget):
         self.password_repeat_label = QLabel("Nhập lại mật khẩu")
         self.password_repeat_label.setStyleSheet("font-size: 15px; font-weight: bold;")
 
-        self.username_field = QLineEdit()
-        self.username_field.setPlaceholderText("Tên đăng nhập")
-        self.username_field.setStyleSheet("""
-            border: 1px solid #CCCCCC;
-            border-radius: 4px;
-            padding: 5px;
-            margin-bottom: 10px;
-        """)
         self.password_old_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
         self.password_old_field.setPlaceholderText("Mật khẩu cũ")
         self.password_old_field.setStyleSheet("""
@@ -89,11 +76,9 @@ class ResetPasswordView(QWidget):
         shadow_effect.setYOffset(5)
         shadow_effect.setColor(QColor(0, 0, 0, 50))
         self.confirm_button.setGraphicsEffect(shadow_effect)
-
+        self.confirm_button.clicked.connect(self.resertpassword)
 
         # place the widget on the window
-        form_layout.addWidget(self.user_label)
-        form_layout.addWidget(self.username_field)
         form_layout.addWidget(self.password_old_label)
         form_layout.addWidget(self.password_old_field)
         form_layout.addWidget(self.password_new_label)
@@ -108,6 +93,24 @@ class ResetPasswordView(QWidget):
         resetpw_layout.addWidget(self.form_widget)
         resetpw_layout.setAlignment(self.form_widget, Qt.AlignmentFlag.AlignCenter)
 
-
-    def go_to_recognitionView(self):
-        self.stacked_widget.setCurrentIndex(2)
+    def resertpassword(self):
+        old_pwd = self.password_old_field.text()
+        new_pwd = self.password_new_field.text()
+        repeat_new_pwd = self.password_repeat_field.text()
+        # Kết nối cơ sở dữ liệu
+        db = mdb.connect(
+            host='localhost',
+            user='root',
+            passwd='',
+            db='facerecognitionsystem'
+        )
+        cursor = db.cursor()
+        # query = "SELECT * FROM teachers WHERE nameTc = %s AND tpassword = %s"
+        # cursor.execute(query, (user, pwd))
+        kt = cursor.fetchone()
+        if kt:
+            QMessageBox.information(self, "Reset password", "Update password sucess!")
+        else:
+            QMessageBox.information(self, "Reset password", "Update password failed!")
+        cursor.close()
+        db.close()
