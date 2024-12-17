@@ -292,7 +292,7 @@ class RecognitionStudentView(QWidget):
                     name = self.label_map[predicted_class[0]]
 
                     #set org
-                    cv2.putText(frame_rgb, name, (30, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+                    cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
                 except Exception as e:
                     print(f"Error during face processing: {e}")
             else:
