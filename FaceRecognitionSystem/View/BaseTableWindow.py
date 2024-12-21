@@ -26,7 +26,7 @@ class BaseTableWindow(QWidget):
         # Tạo thanh tìm kiếm
         search_layout = QHBoxLayout()
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("ID Học sinh")
+        self.search_input.setPlaceholderText("ID Học sinh hoặc tên lớp học")
         self.search_input.setStyleSheet("border: 1px solid #CCCCCC;border-radius: 4px;padding: 5px;")
 
         # Nút tìm kiếm
@@ -44,7 +44,7 @@ class BaseTableWindow(QWidget):
                 color: white;
             }
         """)
-        search_button.clicked.connect(self.search_by_id)  # Kết nối nút tìm kiếm
+        search_button.clicked.connect(self.search_by_id_or_class_name)  # Kết nối nút tìm kiếm
 
         view_all_button = QPushButton("Xem tất cả")
         view_all_button.setStyleSheet("""
@@ -85,8 +85,8 @@ class BaseTableWindow(QWidget):
         search_layout.addWidget(export_excel_button)
         layout.addLayout(search_layout)
 
-        self.table = QTableWidget(10, 4)
-        self.table.setHorizontalHeaderLabels([ "ID SV", "Tên Học sinh", "Buổi", "Ngày"])
+        self.table = QTableWidget(10, 5)
+        self.table.setHorizontalHeaderLabels(["Tên lớp", "ID SV", "Tên Học sinh", "Buổi", "Ngày"])
 
         # Thêm bảng vào layout
         layout.addWidget(self.table)
@@ -118,37 +118,39 @@ class BaseTableWindow(QWidget):
                 sheet.title = "Dữ liệu học sinh"
 
                 # Ghi tiêu đề cột vào tệp Excel
-                sheet.append(["STT", "ID SV", "Tên Học sinh", "Số buổi", "Ngày"])
+                sheet.append(["STT","Tên lớp", "ID SV", "Tên Học sinh", "Số buổi", "Ngày"])
 
                 # Tạo dictionary để nhóm dữ liệu
                 data_grouped = {}
 
-                # Lấy dữ liệu từ bảng và nhóm theo ID, Tên, và ngày
+                # Lấy dữ liệu từ bảng và nhóm theo ID, Tên, và Ngày
                 for row in range(self.table.rowCount()):
-                    id_item = self.table.item(row, 0)
-                    name_item = self.table.item(row, 1)
-                    session_item = self.table.item(row, 2)
-                    date_item = self.table.item(row, 3)
+                    class_name_item = self.table.item(row, 0)
+                    id_item = self.table.item(row, 1)
+                    name_item = self.table.item(row, 2)
+                    session_item = self.table.item(row, 3)
+                    date_item = self.table.item(row, 4)
 
-                    if id_item and name_item and session_item and date_item:
+                    if class_name_item and id_item and name_item and session_item and date_item:
+                        class_name = class_name_item.text()
                         student_id = id_item.text()
                         student_name = name_item.text()
+                        session = session_item.text()
                         date = date_item.text()
 
-                        key = (student_id, student_name)  # Sử dụng ID và Tên làm khóa
+                        key = (student_id, student_name, class_name)  # Thêm "Tên lớp" vào khóa nhóm
                         if key not in data_grouped:
-                            data_grouped[key] = {"count": 0, "dates": []}  # Khởi tạo số buổi và danh sách ngày
-                        data_grouped[key]["count"] += 1  # Cộng dồn số buổi
-                        data_grouped[key]["dates"].append(date)  # Thêm ngày vào danh sách
-
+                            data_grouped[key] = {"count": 0, "dates": []}
+                        data_grouped[key]["count"] += 1
+                        data_grouped[key]["dates"].append(date)
 
                 # Ghi dữ liệu đã nhóm vào tệp Excel (thêm STT)
                 stt = 1
-                for (student_id, student_name), data in data_grouped.items():
+                for (student_id, student_name, class_name), data in data_grouped.items():
                     session_count = data["count"]
-                    dates = ", ".join(data["dates"])  # Nối danh sách ngày thành chuỗi
-                    sheet.append([stt, student_id, student_name, session_count, dates])
-                    stt += 1  # Tăng số thứ tự
+                    dates = ", ".join(data["dates"])
+                    sheet.append([stt, class_name, student_id, student_name, session_count, dates])
+                    stt += 1
 
                 # Lưu workbook vào tệp Excel
                 workbook.save(file_path)
@@ -160,21 +162,27 @@ class BaseTableWindow(QWidget):
             print("Người dùng đã hủy thao tác xuất Excel.")
 
     # Tìm kiếm trong bảng theo ID nhập vào.
-    def search_by_id(self):
-        search_text = self.search_input.text().strip()  # Lấy nội dung trong ô tìm kiếm
+    def search_by_id_or_class_name(self):
+        search_text = self.search_input.text().strip()  # Lấy nội dung tìm kiếm
         if not search_text:
-            print("Vui lòng nhập ID để tìm kiếm.")
+            print("Vui lòng nhập ID hoặc Tên lớp để tìm kiếm.")
             return
+
         found = False
         for row in range(self.table.rowCount()):
-            item = self.table.item(row, 0)  # Lấy giá trị ở cột đầu tiên (ID)
-            if item and item.text() == search_text:
+            # Lấy giá trị ở cột Tên lớp (cột 0) và ID học sinh (cột 1)
+            class_name_item = self.table.item(row, 0)
+            id_item = self.table.item(row, 1)
+
+            # Kiểm tra khớp với Tên lớp hoặc ID học sinh
+            if (class_name_item and search_text.lower() in class_name_item.text().lower()) or (id_item and search_text == id_item.text()):
                 self.table.setRowHidden(row, False)  # Hiển thị hàng phù hợp
                 found = True
             else:
-                self.table.setRowHidden(row, True)  # Ẩn các hàng không phù hợp
+                self.table.setRowHidden(row, True)  # Ẩn hàng không phù hợp
+
         if not found:
-            print(f"Không tìm thấy ID: {search_text}")
+            print(f"Không tìm thấy kết quả phù hợp với: {search_text}")
 
     # Hiển thị lại tất cả các hàng.
     def view_all_rows(self):

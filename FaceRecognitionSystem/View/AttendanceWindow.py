@@ -21,10 +21,14 @@ class AttendanceWindow(BaseTableWindow):
 
         # Truy vấn dữ liệu
         query = """
-        SELECT s.SId, s.nameSt, c.nameC, c.dateC
-        FROM studentsofclass sc JOIN students s ON sc.SId = s.SId
-        JOIN classes c ON c.CId = sc.CId
-        ORDER BY s.SId ASC
+        SELECT c.nameC, s.SId,s.nameSt ,ses.sessionName ,ses.sessionDate 
+        FROM classes c
+        JOIN sessions ses ON c.CId = ses.CId
+        JOIN studentsInSessions ss ON ses.sessionId = ss.sessionId
+        JOIN students s ON ss.SId = s.SId
+        WHERE ss.attendance = 'present'
+        ORDER BY c.CId, ss.sessionId, s.nameSt;
+
         """
         cursor.execute(query)
         data = cursor.fetchall()
