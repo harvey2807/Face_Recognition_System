@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import MySQLdb as mdb
+from MySQLdb import connect
 from AttendanceWindow import AttendanceWindow
 from NoAttendanceWindow import NoAttendanceWindow
 
@@ -98,13 +98,10 @@ class SystemStatistics(QMainWindow):
         return chart_container  # Trả về container chứa biểu đồ
 
     def create_area_chart(self):
-        # Tạo biểu đồ dạng vùng (area chart) với dữ liệu từ database.
-        # Tạo đối tượng Figure từ matplotlib
         figure = Figure(figsize=(10, 6))
         ax = figure.add_subplot(111)
 
-        # Kết nối đến cơ sở dữ liệu
-        db = mdb.connect(
+        db = connect(
             host='localhost',
             user='root',
             passwd='',
@@ -113,24 +110,13 @@ class SystemStatistics(QMainWindow):
         cursor = db.cursor()
 
         # Truy vấn số học sinh đã điểm danh cho mỗi lớp
-        query1 = """
-            SELECT CId, COUNT(SId) AS HocSinhCoDiemDanh
-            FROM studentsofclass
-            GROUP BY CId;
-        """
+        query1 = """"""
         cursor.execute(query1)
         data1 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}  # Tạo dictionary với CId là khóa và số học sinh điểm danh là giá trị
 
         # Truy vấn số học sinh vắng cho mỗi lớp
-        query2 = """
-            SELECT sc.CId, 
-            (SELECT COUNT(*) 
-            FROM students s 
-            WHERE s.SId NOT IN (SELECT SId FROM studentsofclass WHERE CId = sc.CId)
-            ) AS SoHocSinhVang
-            FROM classes sc;
-        """
+        query2 = """"""
         cursor.execute(query2)
         data2 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         hoc_sinh_vang = {row[0]: row[1] for row in data2}  # Tạo dictionary với CId là khóa và số học sinh vắng là giá trị
@@ -144,51 +130,51 @@ class SystemStatistics(QMainWindow):
         # data3 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         # tong_so_lop = len(data3)  # Tổng số lớp
 
-        query4 = """
-            SELECT CId, nameC
-            FROM classes
-        """
-        cursor.execute(query4)
-        data4 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        class_names = {row[0]: row[1] for row in data4}  # Tạo dictionary với CId là khóa và tên lớp là giá trị
+        query4 = """   """
 
-        # Đóng kết nối
+        cursor.execute(query4)
+        data4 = cursor.fetchall()
+        class_names = {row[0]: row[1] for row in data4}
+
         cursor.close()
         db.close()
 
+        # Xử lý dữ liệu cho biểu đồ
+        x = [class_names.get(c, str(c)) for c in hoc_sinh_co_diem_danh.keys()]
+        sumst = [hoc_sinh_co_diem_danh.get(c, 0) for c in hoc_sinh_co_diem_danh.keys()]
+        miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]
 
-        # Dữ liệu cho biểu đồ
-        x = [class_names.get(c, str(c)) for c in hoc_sinh_co_diem_danh.keys()]  # Sử dụng tên buổi làm trục X
-        # dd = [tong_so_lop] * len(x)  # Số bản điểm danh (tổng số lớp)
-        sumst = [hoc_sinh_co_diem_danh.get(c, 0) for c in hoc_sinh_co_diem_danh.keys()]  # Số học sinh điểm danh
-        miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]  # Số học sinh vắng
+        width = 0.35
+        indices = range(len(x))
 
-        # Vẽ biểu đồ dạng vùng
-        ax.fill_between(x, sumst, color="#F29CA3", alpha=0.7, label="Số học sinh điểm danh")
-        ax.fill_between(x, miss, color="#64113F", alpha=0.7, label="Số học sinh vắng")
-        # ax.fill_between(x, dd, color="#F8E71C", alpha=0.7, label="Số lớp")
+        ax.bar([i - width / 2 for i in indices], sumst, width=width, color="#F29CA3", label="Số học sinh điểm danh")
+        ax.bar([i + width / 2 for i in indices], miss, width=width, color="#64113F", label="Số học sinh vắng")
 
-        # Hiển thị giá trị lên các điểm dữ liệu
-        # for i, value in enumerate(sumst):
-        #     ax.text(i, value + 2, f"{value}", color="#0E131F", fontsize=9, ha="center", va="bottom")
-        # for i, value in enumerate(miss):
-        #     ax.text(i, value + 2, f"{value}", color="#0E131F", fontsize=9, ha="center", va="bottom")
+        ax.set_xticks(indices)
+        ax.set_xticklabels(x, rotation=0, ha="right")
 
-        # Cài đặt tiêu đề, trục và phong cách
-        ax.set_title("Thống kê học sinh theo buổi học", fontsize=18, fontweight="bold", color="#0E131F", pad=20)
-        ax.set_ylabel("Số học sinh", fontsize=12, color="#0E131F", labelpad=10)
-        ax.set_xlabel("Buổi", fontsize=12, color="#0E131F", labelpad=10)
-        ax.tick_params(axis="both", colors="#0E131F", labelsize=10)
-        ax.legend(loc="upper right", fontsize=10, facecolor="#4a4a4a", edgecolor="none", labelcolor="white")
+        ax.set_title("Thống kê học sinh theo lớp học", fontsize=18, fontweight="bold", pad=20)
+        ax.set_ylabel("Số học sinh", fontsize=12, labelpad=10)
+        ax.set_xlabel("Lớp học", fontsize=12, labelpad=10)
+        ax.tick_params(axis="both", labelsize=10)
 
-        # Cài đặt nền và lưới
-        ax.set_facecolor("#ffffff")  # Nền cho biểu đồ
-        figure.set_facecolor("#ffffff")  # Nền cho toàn bộ figure
+        # Di chuyển chú thích ra bên ngoài
+        ax.legend(
+        loc="upper right",  # Đặt chú thích ở góc trên bên phải
+        bbox_to_anchor=(1.0, -0.2),  # Điều chỉnh vị trí chú thích ra ngoài
+        ncol=1,  # Sắp xếp theo chiều dọc
+        fontsize=10,
+        frameon=True  # Tạo khung cho chú thích (tùy chọn)
+        )
+
+        ax.set_facecolor("#ffffff")
+        # Tăng khoảng cách giữa biểu đồ và rìa dưới
+        figure.subplots_adjust(bottom=0.15, left=0.1, right=0.9, top=0.9)
+        figure.set_facecolor("#ffffff")
         ax.grid(color="#0E131F", linestyle="--", linewidth=0.5, alpha=0.3)
 
-        # Căn chỉnh khoảng cách và bo góc
-        figure.subplots_adjust(top=0.85, bottom=0.15, left=0.1, right=0.9)
+        # Tự động điều chỉnh khoảng cách
+        figure.tight_layout()
 
-        # Nhúng biểu đồ vào PyQt
         canvas = FigureCanvas(figure)
         return canvas

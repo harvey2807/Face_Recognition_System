@@ -6,6 +6,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/Luc-check
 
 class StudentInformationManagement(QWidget):
     def __init__(self, stacked_widget):
@@ -190,8 +194,11 @@ class StudentInformationManagement(QWidget):
         self.search_button.clicked.connect(self.search_student)
         self.view_all_button.clicked.connect(self.view_all_students)
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/Luc-check
     def reset_fields(self):
         self.id_input.clear()
         self.name_input.clear()
@@ -239,12 +246,19 @@ class StudentInformationManagement(QWidget):
         except Exception as e:
             print(f"Lỗi khi lưu học sinh: {e}")
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/Luc-check
         cursor.close()
         db.close()
 
     def edit_student(self):
+<<<<<<< HEAD
     # Kiểm tra dữ liệu ID
+=======
+        # Kiểm tra dữ liệu ID
+>>>>>>> origin/Luc-check
         student_id = self.id_input.text().strip()
         if not student_id:
             print("ID Học sinh không được để trống!")
@@ -269,7 +283,10 @@ class StudentInformationManagement(QWidget):
             phone = self.phone_input.text().strip()
             address = self.address_input.text().strip()
 
+<<<<<<< HEAD
             
+=======
+>>>>>>> origin/Luc-check
             # Kiểm tra dữ liệu đầu vào
             if not name or not student_class or not cccd:
                 print("Vui lòng nhập đầy đủ thông tin cần thiết!")
@@ -300,7 +317,12 @@ class StudentInformationManagement(QWidget):
         finally:
             cursor.close()
             db.close()
+<<<<<<< HEAD
 # nút xóa
+=======
+
+    # nút xóa
+>>>>>>> origin/Luc-check
     def delete_student(self):
         student_id = self.id_input.text().strip()
         if not student_id:
@@ -329,8 +351,12 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
+<<<<<<< HEAD
 
 # tìm kiếm
+=======
+    # tìm kiếm
+>>>>>>> origin/Luc-check
     def search_student(self):
         keyword = self.search_input.text()
         if not keyword:
@@ -348,7 +374,11 @@ class StudentInformationManagement(QWidget):
             query = "SELECT SId, nameSt, CCCD, gender, class FROM students WHERE SId = %s"
             cursor.execute(query, (keyword,))
             results = cursor.fetchall()
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> origin/Luc-check
             # Cập nhật bảng
             self.table.setRowCount(len(results))
             for row_idx, row_data in enumerate(results):
@@ -360,7 +390,11 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
+<<<<<<< HEAD
 # xem tất cả
+=======
+    # xem tất cả
+>>>>>>> origin/Luc-check
     def view_all_students(self):
         try:
             db = mdb.connect(
@@ -389,4 +423,8 @@ class StudentInformationManagement(QWidget):
             self.reset_fields()
         finally:
             cursor.close()
+<<<<<<< HEAD
             db.close()
+=======
+            db.close()
+>>>>>>> origin/Luc-check

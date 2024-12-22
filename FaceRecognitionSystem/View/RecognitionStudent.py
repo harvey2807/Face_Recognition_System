@@ -230,9 +230,13 @@ class RecognitionStudentView(QWidget):
         self.setLayout(self.grid_layout)
 
     def face_extractor(self, img):
+<<<<<<< HEAD
 
         classifier = load_model("D:\Python\Py_project\FaceRecognitionSystem\model.keras")
 
+=======
+        classifier = load_model("D:\Project\Face_Recognition_System\FaceRecognitionSystem\model.keras")
+>>>>>>> origin/Luc-check
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = face_cascade.detectMultiScale(img, 1.3, 5)
 
@@ -296,7 +300,11 @@ class RecognitionStudentView(QWidget):
                     name = self.label_map[predicted_class[0]]
 
                     #set org
+<<<<<<< HEAD
                     cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
+=======
+                    cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+>>>>>>> origin/Luc-check
                 except Exception as e:
                     print(f"Error during face processing: {e}")
             else:
@@ -312,5 +320,3 @@ class RecognitionStudentView(QWidget):
         if self.camera:
             self.camera.release()
         event.accept()
-
-
