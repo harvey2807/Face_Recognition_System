@@ -1,20 +1,23 @@
 import sys
 
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QGridLayout, QTabWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QVBoxLayout
 )
-from PyQt6.QtCore import Qt, QTimer, QTime, QDate
+from PyQt6.QtCore import Qt, QTimer, QTime, QDate, QSize
 
+from FaceRecognitionSystem.View import Global
 from StudentInformationManagement import StudentInformationManagement
+from ClassManagement import ClassManagementView
 from SystemStatistics import SystemStatistics
 from Profile import ProfileView
 from RecognitionStudent import RecognitionStudentView
 from ResetPassword import ResetPasswordView
 
 class HomeView(QWidget):
-    def __init__(self):
+    def __init__(self,stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         self.setWindowTitle('Face Recognition System')
         self.setGeometry(0, 0, 1200, 700)
         self.setStyleSheet("color: black;")
@@ -45,13 +48,9 @@ class HomeView(QWidget):
                         """)
 
         # Thêm đồng hồ và ngày tháng
-        self.clock_panel = QFrame(self.header_panel)
-        self.clock_panel.setGeometry(5, 5, 50, 40)
-        self.clock_panel.setStyleSheet("border: none;")
-
-        self.clock_icon = QLabel(self.clock_panel)
+        self.clock_icon = QLabel()
         self.clock_icon.setPixmap(QPixmap('../Image/clock-icon.png').scaled(35, 30))
-        self.clock_icon.setGeometry(5, 5, 35, 30)
+        self.clock_icon.setStyleSheet("border: none;")
 
         self.time_date_panel = QFrame(self.header_panel)
         self.time_date_panel.setGeometry(50, 5, 150, 40)
@@ -73,15 +72,33 @@ class HomeView(QWidget):
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.title_panel = QFrame(self.header_panel)
-        self.title_panel.setGeometry(300, 5, 550, 40)
+        self.title_panel.setGeometry(400, 5, 550, 40)
         self.title_panel.setStyleSheet("border: none;")
 
         self.title_layout = QHBoxLayout(self.title_panel)
         self.title_layout.setContentsMargins(0, 0, 0, 0)
         self.title_layout.addWidget(self.title_label)
 
-        main_layout = QGridLayout(self)
-        self.setLayout(main_layout)
+        # Tạo nút logout
+        self.logout_button = QPushButton(self.header_panel)
+        self.logout_button.setIcon(QIcon("../Image/logout_icon.png"))  # Đường dẫn đến icon
+        self.logout_button.setIconSize(QSize(30, 30))  # Kích thước icon
+        self.logout_button.setStyleSheet("font-size: 14px; font-weight: bold; padding: 5px;")
+        self.logout_button.setStyleSheet("border: none;")
+        self.logout_button.clicked.connect(self.logout_action)
+
+        # Sử dụng QHBoxLayout cho header_panel
+        self.header_layout = QHBoxLayout(self.header_panel)
+        self.header_layout.setContentsMargins(10, 5, 10, 5)  # Căn chỉnh lề
+        self.header_layout.setSpacing(10)
+
+        # Thêm các phần tử vào header_layout
+        self.header_layout.addWidget(self.clock_icon)  # Đồng hồ
+        self.header_layout.addWidget(self.time_date_panel)  # Ngày tháng
+        self.header_layout.addStretch()  # Đẩy các phần tử còn lại sang trái
+        self.header_layout.addWidget(self.title_panel)  # Tiêu đề
+        self.header_layout.addStretch()  # Đẩy nút logout sang phải
+        self.header_layout.addWidget(self.logout_button)  # Nút logout
 
         self.main_widget = QWidget(self.panel)
         self.main_widget.setStyleSheet("background-color: white;")
@@ -105,11 +122,13 @@ class HomeView(QWidget):
         self.Profile_page = ProfileView(self)
         self.RecognitionStudent_page = RecognitionStudentView(self)
         self.StudentInformationManagement = StudentInformationManagement(self)
+        self.ClassManagement = ClassManagementView(self)
         self.SystemStatistics = SystemStatistics(self)
         self.Resetpassword_page = ResetPasswordView(self)
 
         self.tab.addTab(self.SystemStatistics, 'Thống kê')
-        self.tab.addTab(self.StudentInformationManagement, 'Quản lí')
+        self.tab.addTab(self.StudentInformationManagement, 'Quản lí học sinh')
+        self.tab.addTab(self.ClassManagement, 'Quản lí lớp học')
         self.tab.addTab(self.RecognitionStudent_page, 'Nhận diện')
         self.tab.addTab(self.Profile_page, 'Thông tin')
         self.tab.addTab(self.Resetpassword_page, 'Đổi mật khẩu')
@@ -123,7 +142,11 @@ class HomeView(QWidget):
         timer.start(1000)
 
         self.update_time()
-        self.show()
+
+    def logout_action(self):
+        Global.GLOBAL_ACCOUNT = ""
+        Global.GLOBAL_ACCOUNTID = ""
+        self.stacked_widget.setCurrentIndex(0)
 
     def update_time(self):
         self.time_label.setText(QTime.currentTime().toString("hh:mm:ss"))
