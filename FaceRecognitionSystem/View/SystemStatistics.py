@@ -109,36 +109,17 @@ class SystemStatistics(QMainWindow):
         )
         cursor = db.cursor()
 
-        query1 = """
-        SELECT c.nameC, COUNT(ss.SId) AS present_students_count
-        FROM classes c
-        JOIN sessions s ON c.CId = s.CId
-        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
-        WHERE ss.attendance = 'present'
-        GROUP BY c.CId;
-        """
+        query1 = """"""
         cursor.execute(query1)
         data1 = cursor.fetchall()
         hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}
 
-        query2 = """
-        SELECT c.nameC, COUNT(ss.SId) AS absent_students_count
-        FROM classes c
-        JOIN sessions s ON c.CId = s.CId
-        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
-        WHERE ss.attendance = 'absent'
-        GROUP BY c.CId;
-
-        """
+        query2 = """"""
         cursor.execute(query2)
         data2 = cursor.fetchall()
         hoc_sinh_vang = {row[0]: row[1] for row in data2}
 
-        query4 = """
-        SELECT c.CId, c.nameC
-        FROM classes c
-        ORDER BY c.CId;
-        """
+        query4 = """"""
         cursor.execute(query4)
         data4 = cursor.fetchall()
         class_names = {row[0]: row[1] for row in data4}
