@@ -4,7 +4,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 import sys
-import csv
+import openpyxl  # Thêm thư viện openpyxl để xuất dữ liệu ra Excel
+from openpyxl import Workbook
+
 class BaseTableWindow(QWidget):
     def __init__(self, title):
         super().__init__()
@@ -60,8 +62,8 @@ class BaseTableWindow(QWidget):
         """)
         view_all_button.clicked.connect(self.view_all_rows)  # Hiển thị tất cả các hàng
 
-        export_csv_button = QPushButton("Xuất CSV")
-        export_csv_button.setStyleSheet("""
+        export_excel_button = QPushButton("Xuất Excel")
+        export_excel_button.setStyleSheet("""
             QPushButton {
                 background-color: black;
                 color: white;
@@ -74,17 +76,17 @@ class BaseTableWindow(QWidget):
                 color: white;
             }
         """)
-        export_csv_button.clicked.connect(self.export_to_csv)  # Kết nối nút xuất CSV với hàm xử lý
+        export_excel_button.clicked.connect(self.export_to_excel)  # Kết nối nút xuất excel với hàm xử lý
 
         # Thêm các nút vào layout tìm kiếm
         search_layout.addWidget(self.search_input)
         search_layout.addWidget(search_button)
         search_layout.addWidget(view_all_button)
-        search_layout.addWidget(export_csv_button)
+        search_layout.addWidget(export_excel_button)
         layout.addLayout(search_layout)
 
         self.table = QTableWidget(10, 4)
-        self.table.setHorizontalHeaderLabels(["ID SV", "Tên Học sinh", "Buổi", "Ngày"])
+        self.table.setHorizontalHeaderLabels([ "ID SV", "Tên Học sinh", "Buổi", "Ngày"])
 
         # Thêm bảng vào layout
         layout.addWidget(self.table)
@@ -99,36 +101,63 @@ class BaseTableWindow(QWidget):
         container.setLayout(layout)
         self.setLayout(layout)  # Đặt layout vào widget cha
 
-        # Hàm xử lý khi nhấn nút Xuất CSV.
-        # Thực hiện việc ghi dữ liệu từ bảng ra tệp CSV.
-    def export_to_csv(self):
-        # Hiển thị hộp thoại để chọn vị trí lưu tệp CSV
+        # Hàm xử lý khi nhấn nút Xuất excel.
+        # Thực hiện việc ghi dữ liệu từ bảng ra tệp excel.
+
+    def export_to_excel(self):
+        # Hiển thị hộp thoại để chọn vị trí lưu tệp Excel
         file_path, _ = QFileDialog.getSaveFileName(
-            self, "Lưu tệp CSV", "", "CSV Files (*.csv);;All Files (*)"
+            self, "Lưu tệp Excel", "", "Excel Files (*.xlsx);;All Files (*)"
         )
 
         if file_path:  # Nếu người dùng chọn vị trí lưu tệp
             try:
-                with open(file_path, mode="w", newline='', encoding="utf-8") as file:
-                    writer = csv.writer(file)
+                # Tạo một workbook mới và một sheet
+                workbook = Workbook()
+                sheet = workbook.active
+                sheet.title = "Dữ liệu học sinh"
 
-                    # Ghi tiêu đề cột vào tệp CSV
-                    headers = [self.table.horizontalHeaderItem(col).text() for col in range(self.table.columnCount())]
-                    writer.writerow(headers)
+                # Ghi tiêu đề cột vào tệp Excel
+                sheet.append(["STT", "ID SV", "Tên Học sinh", "Số buổi", "Ngày"])
 
-                    # Ghi dữ liệu từng dòng vào tệp CSV
-                    for row in range(self.table.rowCount()):
-                        row_data = []
-                        for col in range(self.table.columnCount()):
-                            item = self.table.item(row, col)  # Lấy dữ liệu từng ô
-                            row_data.append(item.text() if item else "")  # Nếu ô trống thì ghi chuỗi rỗng
-                        writer.writerow(row_data)
+                # Tạo dictionary để nhóm dữ liệu
+                data_grouped = {}
+
+                # Lấy dữ liệu từ bảng và nhóm theo ID, Tên, và ngày
+                for row in range(self.table.rowCount()):
+                    id_item = self.table.item(row, 0)
+                    name_item = self.table.item(row, 1)
+                    session_item = self.table.item(row, 2)
+                    date_item = self.table.item(row, 3)
+
+                    if id_item and name_item and session_item and date_item:
+                        student_id = id_item.text()
+                        student_name = name_item.text()
+                        date = date_item.text()
+
+                        key = (student_id, student_name)  # Sử dụng ID và Tên làm khóa
+                        if key not in data_grouped:
+                            data_grouped[key] = {"count": 0, "dates": []}  # Khởi tạo số buổi và danh sách ngày
+                        data_grouped[key]["count"] += 1  # Cộng dồn số buổi
+                        data_grouped[key]["dates"].append(date)  # Thêm ngày vào danh sách
+
+
+                # Ghi dữ liệu đã nhóm vào tệp Excel (thêm STT)
+                stt = 1
+                for (student_id, student_name), data in data_grouped.items():
+                    session_count = data["count"]
+                    dates = ", ".join(data["dates"])  # Nối danh sách ngày thành chuỗi
+                    sheet.append([stt, student_id, student_name, session_count, dates])
+                    stt += 1  # Tăng số thứ tự
+
+                # Lưu workbook vào tệp Excel
+                workbook.save(file_path)
 
                 print(f"Dữ liệu đã được xuất thành công tại: {file_path}")
             except Exception as e:
-                print(f"Lỗi khi xuất CSV: {e}")
+                print(f"Lỗi khi xuất Excel: {e}")
         else:
-            print("Người dùng đã hủy thao tác xuất CSV.")
+            print("Người dùng đã hủy thao tác xuất Excel.")
 
     # Tìm kiếm trong bảng theo ID nhập vào.
     def search_by_id(self):
