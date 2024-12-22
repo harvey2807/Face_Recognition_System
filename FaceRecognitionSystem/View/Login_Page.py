@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, Q
     QLineEdit, QPushButton, QMessageBox
 import MySQLdb as mdb
 import Global
-from FaceRecognitionSystem.View.Home import HomeView
+from Home import HomeView
 
 
 class LoginView(QWidget):
@@ -235,8 +235,7 @@ class LoginView(QWidget):
 
     def reset_form(self):
         self.username_field.clear()
-<<<<<<< HEAD
-=======
+
         self.password_field.clear()
 
     def goHome(self):
@@ -244,5 +243,5 @@ class LoginView(QWidget):
         self.hide()
         self.stacked_widget.addWidget(home)  # Thêm HomeView vào stacked_widget
         self.stacked_widget.setCurrentWidget(home)
->>>>>>> origin/diem
+
 

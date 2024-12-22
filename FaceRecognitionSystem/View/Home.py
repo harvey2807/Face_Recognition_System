@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, QTime, QDate, QSize
 
-from FaceRecognitionSystem.View import Global
+import Global
 from StudentInformationManagement import StudentInformationManagement
 from ClassManagement import ClassManagementView
 from SystemStatistics import SystemStatistics

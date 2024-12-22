@@ -1,5 +1,5 @@
 import sys
-<<<<<<< HEAD
+
 from PyQt6.QtCore import  Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, \
@@ -11,7 +11,7 @@ class ResetPasswordView(QWidget):
         super().__init__()
         self.setStyleSheet("color: black")
         self.init_ui()
-=======
+
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -31,7 +31,7 @@ class SystemStatistics(QMainWindow):
         self.setGeometry(100, 100, 1200, 700)
         self.setup_ui()  # Gọi hàm thiết lập giao diện
         self.setStyleSheet("background-color: white; color:black;")  # Đặt màu nền và màu chữ
->>>>>>> origin/Luc-check
+
 
     def setup_ui(self):
         # Tạo layout chính
@@ -40,10 +40,10 @@ class SystemStatistics(QMainWindow):
         # Tạo QTabWidget và thêm các tab vào
         tab_widget = QTabWidget(self)
 
-<<<<<<< HEAD
+
         self.password_old_label = QLabel("Mật khẩu cũ")
         self.password_old_label.setStyleSheet("font-size: 15px; font-weight: bold;")
-=======
+
         tab_widget.clear()  # Xóa các tab cũ
         tab_widget.addTab(self.create_statistics_tab(), "Thống kê")
         tab_widget.addTab(self.create_no_attendance_tab(), "Học sinh vắng")
@@ -51,7 +51,7 @@ class SystemStatistics(QMainWindow):
 
         # Thêm QTabWidget vào layout chính
         main_layout.addWidget(tab_widget)
->>>>>>> origin/Luc-check
+
 
         # Tạo widget trung tâm và đặt layout chính cho nó
         container = QWidget()
@@ -63,7 +63,7 @@ class SystemStatistics(QMainWindow):
         statistics_tab = QWidget()
         layout = QVBoxLayout()
 
-<<<<<<< HEAD
+
         self.password_old_field = QLineEdit(self, echoMode=QLineEdit.EchoMode.Password)
         self.password_old_field.setPlaceholderText("Mật khẩu cũ")
         self.password_old_field.setStyleSheet("""
@@ -117,7 +117,7 @@ class SystemStatistics(QMainWindow):
         form_layout.addWidget(self.password_repeat_field)
         form_layout.addWidget(self.confirm_button)
         self.form_widget.setLayout(form_layout)
-=======
+
         # Thêm biểu đồ với viền
         chart_widget = self.create_chart_with_border()
         layout.addWidget(chart_widget)
@@ -175,7 +175,7 @@ class SystemStatistics(QMainWindow):
     def create_area_chart(self):
         figure = Figure(figsize=(10, 6))
         ax = figure.add_subplot(111)
->>>>>>> origin/Luc-check
+
 
         db = connect(
             host='localhost',
@@ -185,7 +185,7 @@ class SystemStatistics(QMainWindow):
         )
         cursor = db.cursor()
 
-<<<<<<< HEAD
+
     def resertpassword(self):
         old_pwd = self.password_old_field.text()
         new_pwd = self.password_new_field.text()
@@ -207,7 +207,7 @@ class SystemStatistics(QMainWindow):
             QMessageBox.information(self, "Reset password", "Update password failed!")
         cursor.close()
         db.close()
-=======
+
         query1 = """
         SELECT c.nameC, COUNT(ss.SId) AS present_students_count
         FROM classes c
@@ -284,4 +284,4 @@ class SystemStatistics(QMainWindow):
 
         canvas = FigureCanvas(figure)
         return canvas
->>>>>>> origin/Luc-check
+

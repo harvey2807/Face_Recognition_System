@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
 
 import Global
-from FaceRecognitionSystem.View.Global import GLOBAL_ACCOUNTID
+from Global import GLOBAL_ACCOUNTID
 
 
 class ClassManagementView(QWidget):
