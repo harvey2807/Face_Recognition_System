@@ -31,6 +31,7 @@ class AttendanceWindow(BaseTableWindow):
                ORDER BY c.CId, ss.sessionId, s.nameSt;
 
                """
+
         cursor.execute(query)
         data = cursor.fetchall()
 
