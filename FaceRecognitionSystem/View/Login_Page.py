@@ -213,4 +213,4 @@ class LoginView(QWidget):
 
     def reset_form(self):
         self.username_field.clear()
-        self.password_field.clear()
+

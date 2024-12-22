@@ -6,11 +6,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 import MySQLdb as mdb
 
+
 class AttendanceWindow(BaseTableWindow):
     def __init__(self):
         super().__init__("Học sinh có điểm danh")
 
-    # Kết nối đến cơ sở dữ liệu
+        # Kết nối đến cơ sở dữ liệu
         db = mdb.connect(
             host='localhost',
             user='root',
@@ -21,15 +22,16 @@ class AttendanceWindow(BaseTableWindow):
 
         # Truy vấn dữ liệu
         query = """
-        SELECT c.nameC, s.SId,s.nameSt ,ses.sessionName ,ses.sessionDate 
-        FROM classes c
-        JOIN sessions ses ON c.CId = ses.CId
-        JOIN studentsInSessions ss ON ses.sessionId = ss.sessionId
-        JOIN students s ON ss.SId = s.SId
-        WHERE ss.attendance = 'present'
-        ORDER BY c.CId, ss.sessionId, s.nameSt;
+               SELECT c.nameC, s.SId,s.nameSt ,ses.sessionName ,ses.sessionDate 
+               FROM classes c
+               JOIN sessions ses ON c.CId = ses.CId
+               JOIN studentsInSessions ss ON ses.sessionId = ss.sessionId
+               JOIN students s ON ss.SId = s.SId
+               WHERE ss.attendance = 'present'
+               ORDER BY c.CId, ss.sessionId, s.nameSt;
 
-        """
+               """
+
         cursor.execute(query)
         data = cursor.fetchall()
 
