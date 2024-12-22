@@ -20,12 +20,7 @@ class AttendanceWindow(BaseTableWindow):
         cursor = db.cursor()
 
         # Truy vấn dữ liệu
-        query = """
-        SELECT s.SId, s.nameSt, c.nameC, c.dateC
-        FROM studentsofclass sc JOIN students s ON sc.SId = s.SId
-        JOIN classes c ON c.CId = sc.CId
-        ORDER BY s.SId ASC
-        """
+        query = """"""
         cursor.execute(query)
         data = cursor.fetchall()
 

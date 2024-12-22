@@ -20,16 +20,7 @@ class NoAttendanceWindow(BaseTableWindow):
         cursor = db.cursor()
 
         # Truy vấn dữ liệu
-        query = """
-        SELECT s.SId, s.nameSt, c.nameC, c.dateC
-        FROM classes c
-        LEFT JOIN students s 
-            ON s.SId NOT IN (
-                SELECT SId FROM studentsofclass WHERE CId = c.CId
-            )
-        WHERE s.SId IS NOT NULL
-        ORDER BY s.SId ASC
-        """
+        query = """"""
         cursor.execute(query)
         data = cursor.fetchall()
 

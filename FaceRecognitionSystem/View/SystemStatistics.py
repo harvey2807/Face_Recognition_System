@@ -113,24 +113,13 @@ class SystemStatistics(QMainWindow):
         cursor = db.cursor()
 
         # Truy vấn số học sinh đã điểm danh cho mỗi lớp
-        query1 = """
-            SELECT CId, COUNT(SId) AS HocSinhCoDiemDanh
-            FROM studentsofclass
-            GROUP BY CId;
-        """
+        query1 = """"""
         cursor.execute(query1)
         data1 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}  # Tạo dictionary với CId là khóa và số học sinh điểm danh là giá trị
 
         # Truy vấn số học sinh vắng cho mỗi lớp
-        query2 = """
-            SELECT sc.CId, 
-            (SELECT COUNT(*) 
-            FROM students s 
-            WHERE s.SId NOT IN (SELECT SId FROM studentsofclass WHERE CId = sc.CId)
-            ) AS SoHocSinhVang
-            FROM classes sc;
-        """
+        query2 = """"""
         cursor.execute(query2)
         data2 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         hoc_sinh_vang = {row[0]: row[1] for row in data2}  # Tạo dictionary với CId là khóa và số học sinh vắng là giá trị
@@ -144,10 +133,7 @@ class SystemStatistics(QMainWindow):
         # data3 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         # tong_so_lop = len(data3)  # Tổng số lớp
 
-        query4 = """
-            SELECT CId, nameC
-            FROM classes
-        """
+        query4 = """   """
         cursor.execute(query4)
         data4 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
         class_names = {row[0]: row[1] for row in data4}  # Tạo dictionary với CId là khóa và tên lớp là giá trị
