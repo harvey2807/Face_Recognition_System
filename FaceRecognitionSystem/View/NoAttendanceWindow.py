@@ -20,7 +20,17 @@ class NoAttendanceWindow(BaseTableWindow):
         cursor = db.cursor()
 
         # Truy vấn dữ liệu
-        query = """"""
+        query = """
+        -- học sinh vắng mặt theo lớp
+        SELECT c.nameC, s.SId,s.nameSt ,ses.sessionName ,ses.sessionDate 
+        FROM classes c
+        JOIN sessions ses ON c.CId = ses.CId
+        JOIN studentsInSessions ss ON ses.sessionId = ss.sessionId
+        JOIN students s ON ss.SId = s.SId
+        WHERE ss.attendance = 'absent'
+        ORDER BY c.CId, ses.sessionId, s.nameSt;
+
+        """
         cursor.execute(query)
         data = cursor.fetchall()
 

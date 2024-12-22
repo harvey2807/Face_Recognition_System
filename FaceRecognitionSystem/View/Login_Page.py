@@ -195,6 +195,8 @@ class LoginView(QWidget):
         else:
             QMessageBox.information(self, "Login error", "Login fail!")
             self.reset_form()
+        cursor.close()
+        db.close()
 
     def sign_up(self):
         print("dang ki")
@@ -211,6 +213,3 @@ class LoginView(QWidget):
 
     def reset_form(self):
         self.username_field.clear()
-        self.password_field.clear()
-
-
