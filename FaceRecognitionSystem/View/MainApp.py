@@ -3,7 +3,6 @@ import sys
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QStackedWidget, QApplication
 from Login_Page import LoginView
 from SignUp_Page import SignUpView
-from Home import HomeView
 
 class MainApp(QWidget):
     def __init__(self):
@@ -20,12 +19,9 @@ class MainApp(QWidget):
         # Thêm các trang
         self.login_page = LoginView(self.stacked_widget)
         self.signup_page = SignUpView(self.stacked_widget)
-        self.view_page = HomeView()
 
         self.stacked_widget.addWidget(self.login_page)
         self.stacked_widget.addWidget(self.signup_page)
-        self.stacked_widget.addWidget(self.view_page)
-
 
         # Thiết lập trang đầu tiên
         self.stacked_widget.setCurrentIndex(0)
@@ -34,7 +30,6 @@ class MainApp(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.stacked_widget)
         self.setLayout(layout)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
