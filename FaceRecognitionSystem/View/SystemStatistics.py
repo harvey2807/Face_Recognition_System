@@ -109,29 +109,51 @@ class SystemStatistics(QMainWindow):
         )
         cursor = db.cursor()
 
+<<<<<<< HEAD
         # Truy vấn số học sinh đã điểm danh cho mỗi lớp
         query1 = """"""
+=======
+        query1 = """
+        SELECT c.nameC, COUNT(ss.SId) AS present_students_count
+        FROM classes c
+        JOIN sessions s ON c.CId = s.CId
+        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
+        WHERE ss.attendance = 'present'
+        GROUP BY c.CId;
+        """
+>>>>>>> origin/CamTu
         cursor.execute(query1)
-        data1 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}  # Tạo dictionary với CId là khóa và số học sinh điểm danh là giá trị
+        data1 = cursor.fetchall()
+        hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}
 
+<<<<<<< HEAD
         # Truy vấn số học sinh vắng cho mỗi lớp
         query2 = """"""
+=======
+        query2 = """
+        SELECT c.nameC, COUNT(ss.SId) AS absent_students_count
+        FROM classes c
+        JOIN sessions s ON c.CId = s.CId
+        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
+        WHERE ss.attendance = 'absent'
+        GROUP BY c.CId;
+
+        """
+>>>>>>> origin/CamTu
         cursor.execute(query2)
-        data2 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        hoc_sinh_vang = {row[0]: row[1] for row in data2}  # Tạo dictionary với CId là khóa và số học sinh vắng là giá trị
+        data2 = cursor.fetchall()
+        hoc_sinh_vang = {row[0]: row[1] for row in data2}
 
-        # # Truy vấn tổng số lớp
-        # query3 = """
-        #     SELECT DISTINCT CId
-        #     FROM studentsofclass
-        # """
-        # cursor.execute(query3)
-        # data3 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        # tong_so_lop = len(data3)  # Tổng số lớp
-
+<<<<<<< HEAD
         query4 = """   """
 
+=======
+        query4 = """
+        SELECT c.CId, c.nameC
+        FROM classes c
+        ORDER BY c.CId;
+        """
+>>>>>>> origin/CamTu
         cursor.execute(query4)
         data4 = cursor.fetchall()
         class_names = {row[0]: row[1] for row in data4}
