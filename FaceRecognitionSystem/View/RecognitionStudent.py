@@ -28,7 +28,7 @@ class RecognitionStudentView(QWidget):
         )
         cursor = db.cursor()
 
-        self.model = load_model("D:\Python\Py_project\FaceRecognitionSystem\model.keras")
+        self.model = load_model("D:\Python\model.keras")
 
         self.count = 0
         self.fronter = []
