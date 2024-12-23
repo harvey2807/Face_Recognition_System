@@ -1,3 +1,4 @@
+
 import sys
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -117,13 +118,9 @@ class SystemStatistics(QMainWindow):
         WHERE ss.attendance = 'present'
         GROUP BY c.CId;
         """
-
         cursor.execute(query1)
         data1 = cursor.fetchall()
         hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}
-
-
-        # Truy vấn số học sinh vắng cho mỗi lớp
 
         query2 = """
         SELECT c.nameC, COUNT(ss.SId) AS absent_students_count
@@ -134,18 +131,15 @@ class SystemStatistics(QMainWindow):
         GROUP BY c.CId;
 
         """
-
         cursor.execute(query2)
         data2 = cursor.fetchall()
         hoc_sinh_vang = {row[0]: row[1] for row in data2}
-
 
         query4 = """
         SELECT c.CId, c.nameC
         FROM classes c
         ORDER BY c.CId;
         """
-
         cursor.execute(query4)
         data4 = cursor.fetchall()
         class_names = {row[0]: row[1] for row in data4}

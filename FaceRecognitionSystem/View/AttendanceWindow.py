@@ -6,12 +6,11 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 import MySQLdb as mdb
 
-
 class AttendanceWindow(BaseTableWindow):
     def __init__(self):
         super().__init__("Học sinh có điểm danh")
 
-        # Kết nối đến cơ sở dữ liệu
+    # Kết nối đến cơ sở dữ liệu
         db = mdb.connect(
             host='localhost',
             user='root',

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
 
+
 class StudentInformationManagement(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
@@ -190,7 +191,6 @@ class StudentInformationManagement(QWidget):
         self.search_button.clicked.connect(self.search_student)
         self.view_all_button.clicked.connect(self.view_all_students)
 
-
     def reset_fields(self):
         self.id_input.clear()
         self.name_input.clear()
@@ -237,13 +237,12 @@ class StudentInformationManagement(QWidget):
             self.reset_fields()
         except Exception as e:
             print(f"Lỗi khi lưu học sinh: {e}")
+
         cursor.close()
         db.close()
 
     def edit_student(self):
-
-    # Kiểm tra dữ liệu ID
-
+        # Kiểm tra dữ liệu ID
         student_id = self.id_input.text().strip()
         if not student_id:
             print("ID Học sinh không được để trống!")
@@ -328,8 +327,7 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
-# tìm kiếm
-
+    # tìm kiếm
     def search_student(self):
         keyword = self.search_input.text()
         if not keyword:
@@ -348,7 +346,6 @@ class StudentInformationManagement(QWidget):
             cursor.execute(query, (keyword,))
             results = cursor.fetchall()
 
-
             # Cập nhật bảng
             self.table.setRowCount(len(results))
             for row_idx, row_data in enumerate(results):
@@ -361,7 +358,6 @@ class StudentInformationManagement(QWidget):
             db.close()
 
     # xem tất cả
-
     def view_all_students(self):
         try:
             db = mdb.connect(
@@ -391,4 +387,3 @@ class StudentInformationManagement(QWidget):
         finally:
             cursor.close()
             db.close()
-
