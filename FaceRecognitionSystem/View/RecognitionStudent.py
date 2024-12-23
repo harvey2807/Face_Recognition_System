@@ -43,15 +43,9 @@ class RecognitionStudentView(QWidget):
         for i in range(len(ids)):
             self.mapIdtoName[ids[i]] =  names[i]
         print(self.mapIdtoName)
-        # self.label_map = ['DangTranTanLuc', 'Nguyen Thi Ngoc Diem', 'Phung Khanh Duy',
-        #                   'VoNguyenThanhDieu',
-        #                   'VoThiCamTu']
         self.label_map = ids
-        # for n in names:
-        #     print(n)
 
     def init_ui(self):
-        # Định nghĩa CSS để tạo giao diện
         self.setStyleSheet("""
                 QWidget {
                         background-color: white;
@@ -148,8 +142,15 @@ class RecognitionStudentView(QWidget):
         self.close_camera_btn.setStyleSheet("background-color: #F44336; color: white; padding: 10px;")
         self.close_camera_btn.clicked.connect(self.toggle_camera)
 
+        # camera_buttons_layout = QHBoxLayout()
+        self.reset_recognition = QPushButton("Nhận diện lại")
+        self.reset_recognition.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
+        self.reset_recognition.clicked.connect(self.remove_inf)
+
         camera_buttons_layout.addWidget(self.open_camera_btn)
         camera_buttons_layout.addWidget(self.close_camera_btn)
+        camera_buttons_layout.addWidget(self.reset_recognition)
+        
         self.recognition_layout.addLayout(camera_buttons_layout)
 
         # Thêm màn hình nhận diện vào main layout
@@ -238,6 +239,9 @@ class RecognitionStudentView(QWidget):
 
         self.setLayout(self.grid_layout)
 
+    def remove_inf(self,):
+        pass
+
     def face_extractor(self, img):
 
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -261,7 +265,7 @@ class RecognitionStudentView(QWidget):
                 self.camera_feed.setText("Không thể mở camera")
                 return
             self.is_camera_active = True
-            self.timer.start(10)  # Cập nhật khung hình mỗi 30ms
+            self.timer.start(10)  # Cập nhật khung hình mỗi 10ms
         else:
             # Tắt camera
             self.timer.stop()
