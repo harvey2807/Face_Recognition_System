@@ -109,29 +109,31 @@ class SystemStatistics(QMainWindow):
         )
         cursor = db.cursor()
 
-        # Truy vấn số học sinh đã điểm danh cho mỗi lớp
-        query1 = """"""
+        query1 = """
+            SELECT CId, COUNT(SId) AS HocSinhCoDiemDanh
+            FROM studentsofclass
+            GROUP BY CId;
+        """
         cursor.execute(query1)
-        data1 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}  # Tạo dictionary với CId là khóa và số học sinh điểm danh là giá trị
+        data1 = cursor.fetchall()
+        hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}
 
-        # Truy vấn số học sinh vắng cho mỗi lớp
-        query2 = """"""
+        query2 = """
+            SELECT sc.CId, 
+            (SELECT COUNT(*) 
+            FROM students s 
+            WHERE s.SId NOT IN (SELECT SId FROM studentsofclass WHERE CId = sc.CId)
+            ) AS SoHocSinhVang
+            FROM classes sc;
+        """
         cursor.execute(query2)
-        data2 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        hoc_sinh_vang = {row[0]: row[1] for row in data2}  # Tạo dictionary với CId là khóa và số học sinh vắng là giá trị
+        data2 = cursor.fetchall()
+        hoc_sinh_vang = {row[0]: row[1] for row in data2}
 
-        # # Truy vấn tổng số lớp
-        # query3 = """
-        #     SELECT DISTINCT CId
-        #     FROM studentsofclass
-        # """
-        # cursor.execute(query3)
-        # data3 = cursor.fetchall()  # Lấy tất cả kết quả truy vấn
-        # tong_so_lop = len(data3)  # Tổng số lớp
-
-        query4 = """   """
-
+        query4 = """
+            SELECT CId, nameC
+            FROM classes
+        """
         cursor.execute(query4)
         data4 = cursor.fetchall()
         class_names = {row[0]: row[1] for row in data4}
@@ -139,7 +141,6 @@ class SystemStatistics(QMainWindow):
         cursor.close()
         db.close()
 
-        # Xử lý dữ liệu cho biểu đồ
         x = [class_names.get(c, str(c)) for c in hoc_sinh_co_diem_danh.keys()]
         sumst = [hoc_sinh_co_diem_danh.get(c, 0) for c in hoc_sinh_co_diem_danh.keys()]
         miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]
@@ -153,9 +154,9 @@ class SystemStatistics(QMainWindow):
         ax.set_xticks(indices)
         ax.set_xticklabels(x, rotation=0, ha="right")
 
-        ax.set_title("Thống kê học sinh theo lớp học", fontsize=18, fontweight="bold", pad=20)
+        ax.set_title("Thống kê học sinh theo buổi học", fontsize=18, fontweight="bold", pad=20)
         ax.set_ylabel("Số học sinh", fontsize=12, labelpad=10)
-        ax.set_xlabel("Lớp học", fontsize=12, labelpad=10)
+        ax.set_xlabel("Buổi học", fontsize=12, labelpad=10)
         ax.tick_params(axis="both", labelsize=10)
 
         # Di chuyển chú thích ra bên ngoài

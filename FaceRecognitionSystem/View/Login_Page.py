@@ -5,8 +5,8 @@ from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, \
     QLineEdit, QPushButton, QMessageBox
 import MySQLdb as mdb
-from PyQt6.uic import widgetPluginPath
-from PyQt6.uic.Compiler.qtproxies import QtWidgets
+import Global
+from FaceRecognitionSystem.View.Home import HomeView
 
 
 class LoginView(QWidget):
@@ -21,7 +21,6 @@ class LoginView(QWidget):
         self.clock_panel = QFrame(self.header_panel)
 
         self.stacked_widget = stacked_widget
-
         # Set the window title
         self.setWindowTitle('Face Recognition System')
         self.setGeometry(0, 0, 1200, 700)        # Show the window
@@ -176,27 +175,50 @@ class LoginView(QWidget):
         self.show()
 
     def login(self):
-        user = self.username_field.text()
-        pwd = self.password_field.text()
-        # Kết nối cơ sở dữ liệu
-        db = mdb.connect(
-            host='localhost',
-            user='root',
-            passwd='',
-            db='facerecognitionsystem'
-        )
-        cursor = db.cursor()
-        query = "SELECT * FROM teachers WHERE nameTc = %s AND tpassword = %s"
-        cursor.execute(query, (user, pwd))
-        kt = cursor.fetchone()
-        if kt:
-            QMessageBox.information(self, "Login output", "Login success")
-            self.stacked_widget.setCurrentIndex(2)
-        else:
-            QMessageBox.information(self, "Login error", "Login fail!")
-            self.reset_form()
-        cursor.close()
-        db.close()
+        userName = self.username_field.text().strip()  # Loại bỏ khoảng trắng
+        pwd = self.password_field.text().strip()  # Loại bỏ khoảng trắng
+
+        # Kiểm tra thông tin đầu vào
+        if not userName or not pwd:
+            QMessageBox.warning(self, "Input Error", "Vui lòng nhập tên người dùng và mật khẩu!")
+            return
+
+        try:
+            # Kết nối cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db='facerecognitionsystem'
+            )
+            cursor = db.cursor()
+
+            # Truy vấn cơ sở dữ liệu để kiểm tra tên tài khoản và mật khẩu
+            query = "SELECT * FROM teachers WHERE nameTc = %s AND tpassword = %s"
+            cursor.execute(query, (userName, pwd))
+            kt = cursor.fetchone()
+
+            if kt:
+                Global.GLOBAL_ACCOUNT= userName
+                Global.GLOBAL_ACCOUNTID = kt[0]  # Lấy teacherId từ cột đầu tiên trong kết quả truy vấn
+                print(f"Đăng nhập thành công! Tài khoản: {Global.GLOBAL_ACCOUNT}, ID: {Global.GLOBAL_ACCOUNTID}")
+
+                # Hiển thị thông báo đăng nhập thành công
+                QMessageBox.information(self, "Login output", "Đăng nhập thành công!")
+                self.goHome() # Chuyển đến giao diện tiếp theo
+
+            else:
+                QMessageBox.information(self, "Login error", "Tên đăng nhập hoặc mật khẩu không đúng!")
+                self.reset_form()
+
+        except mdb.Error as e:
+            # Xử lý lỗi cơ sở dữ liệu
+            print(f"Lỗi kết nối cơ sở dữ liệu: {e}")
+            QMessageBox.critical(self, "Database Error", "Không thể kết nối đến cơ sở dữ liệu.")
+
+        finally:
+            cursor.close()
+            db.close()
 
     def sign_up(self):
         print("dang ki")
@@ -213,4 +235,10 @@ class LoginView(QWidget):
 
     def reset_form(self):
         self.username_field.clear()
+        self.password_field.clear()
 
+    def goHome(self):
+        home = HomeView(self)
+        self.hide()
+        self.stacked_widget.addWidget(home)  # Thêm HomeView vào stacked_widget
+        self.stacked_widget.setCurrentWidget(home)
