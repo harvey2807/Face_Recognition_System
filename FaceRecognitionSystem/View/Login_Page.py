@@ -6,7 +6,9 @@ from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, Q
     QLineEdit, QPushButton, QMessageBox
 import MySQLdb as mdb
 import Global
+
 from Home import HomeView
+
 
 
 class LoginView(QWidget):
@@ -243,5 +245,4 @@ class LoginView(QWidget):
         self.hide()
         self.stacked_widget.addWidget(home)  # Thêm HomeView vào stacked_widget
         self.stacked_widget.setCurrentWidget(home)
-
 

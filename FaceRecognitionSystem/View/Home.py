@@ -6,7 +6,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, QTime, QDate, QSize
 
+
 import Global
+
 from StudentInformationManagement import StudentInformationManagement
 from ClassManagement import ClassManagementView
 from SystemStatistics import SystemStatistics
@@ -144,9 +146,10 @@ class HomeView(QWidget):
         self.update_time()
 
     def logout_action(self):
-        Global.GLOBAL_ACCOUNT = ""
-        Global.GLOBAL_ACCOUNTID = ""
+
         self.stacked_widget.setCurrentIndex(0)
+        Global.GLOBAL_ACCOUNT = None
+        Global.GLOBAL_ACCOUNTID = None
 
     def update_time(self):
         self.time_label.setText(QTime.currentTime().toString("hh:mm:ss"))

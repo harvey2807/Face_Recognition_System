@@ -10,7 +10,12 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import MySQLdb as mdb
+
 from PyQt6.QtCore import  QTime
+
+import Global
+
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
 
@@ -99,15 +104,17 @@ class RecognitionStudentView(QWidget):
         choose_layout = QHBoxLayout()
         self.course_label = QLabel("Chọn Lớp:")
         self.course_label.setStyleSheet("border: none")
-        self.course_combo = QComboBox()
-        self.course_combo.addItems(["Cấu trúc dữ liệu", "Python"])
-        self.course_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.classname = QComboBox()
+        class_names = self.loadClassData()
+        self.classname.addItems(class_names)
+        self.classname.setStyleSheet("padding: 5px; border: 1px solid gray;")
 
         self.class_label = QLabel("Chọn Buổi:")
         self.class_label.setStyleSheet("border: none")
-        self.class_combo = QComboBox()
-        self.class_combo.addItems(["1", "2", "3"])
-        self.class_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.sessionname = QComboBox()
+        session_name = self.loadSessionData()
+        self.sessionname.addItems(session_name)
+        self.sessionname.setStyleSheet("padding: 5px; border: 1px solid gray;")
 
         self.attendance_label = QLabel("Loại Điểm Danh:")
         self.attendance_label.setStyleSheet("border: none")
@@ -237,6 +244,92 @@ class RecognitionStudentView(QWidget):
         self.grid_layout.setColumnStretch(1, 1)  # infor_content chiếm 1 phần
 
         self.setLayout(self.grid_layout)
+
+    def loadClassData(self):
+        # Mảng để chứa dữ liệu
+        class_names = []
+        print(Global.GLOBAL_ACCOUNTID)
+
+        try:
+            # Kết nối đến cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+
+            # Truy vấn để lấy tên lớp học
+            query = """
+                    SELECT nameC
+                    FROM classes 
+                    JOIN teachers t ON classes.TId = t.TID
+                    WHERE t.TID = %s
+                    """
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,))  # Lọc theo giáo viên
+            results = cursor.fetchall()
+
+            # Kiểm tra nếu không có kết quả
+            if not results:
+                print("Không có lớp học nào trong hệ thống.")
+                return class_names  # Trả về mảng rỗng
+
+            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
+            class_names = [result[0] for result in results]  # result[0] là tên lớp học
+
+        except Exception as e:
+            print(f"Lỗi khi tải dữ liệu: {e}")
+
+        finally:
+            # Đóng kết nối và cursor
+            cursor.close()
+            db.close()
+
+        return class_names
+
+    def loadSessionData(self):
+        # Mảng để chứa dữ liệu
+        session_names = []
+        print(Global.GLOBAL_ACCOUNTID)
+
+        try:
+            # Kết nối đến cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+
+            # Truy vấn để lấy tên lớp học
+            query = """
+                    SELECT sessionName
+                    FROM sessions 
+                    JOIN teachers t ON classes.TId = t.TID
+                    WHERE t.TID = %s
+                    """
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,))  # Lọc theo giáo viên
+            results = cursor.fetchall()
+
+            # Kiểm tra nếu không có kết quả
+            if not results:
+                print("Không có lớp học nào trong hệ thống.")
+                return session_names  # Trả về mảng rỗng
+
+            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
+            session_names = [result[0] for result in results]  # result[0] là tên lớp học
+
+        except Exception as e:
+            print(f"Lỗi khi tải dữ liệu: {e}")
+
+        finally:
+            # Đóng kết nối và cursor
+            cursor.close()
+            db.close()
+
+        return session_names
 
     def face_extractor(self, img):
 
