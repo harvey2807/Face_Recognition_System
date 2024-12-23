@@ -6,3 +6,8 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# Bỏ qua thư mục __pycache__
+__pycache__/
+
+# Bỏ qua tất cả các file .pyc
+*.pyc
