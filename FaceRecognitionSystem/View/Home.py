@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt, QTimer, QTime, QDate
 
 from StudentInformationManagement import StudentInformationManagement
 from SystemStatistics import SystemStatistics
-from Profile import ProfileView
+# from Profile import ProfileView
 from RecognitionStudent import RecognitionStudentView
 from ResetPassword import ResetPasswordView
 
