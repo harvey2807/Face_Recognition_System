@@ -1,7 +1,7 @@
 # Face Recognition System
 This is a project Python subject which using model AI to detect face of classmate 
 
-This project uses a technique called transfer learing to trained model insightface
+This project uses a technique called transfer learing to trained model retinaface, ResNet
 
 GUI: PyQt
 
@@ -17,11 +17,13 @@ Transfer learning uses pre-trained models from one machine learning task or data
 
 Model architechture:
 
-![image](https://insightface.ai/assets/img/custom/thumb_subcenter.png)
+![image](https://images.viblo.asia/dd71c193-b255-40ce-86c9-dcbac17e0a6f.png)
 
 This is documents about it: https://arxiv.org/pdf/1801.07698. 
 
-Link dataset: https://drive.google.com/drive/folders/186b81JOettrzb-Re14NRwW0HQjC1WIQb
+This is documents about resnet: https://viblo.asia/p/gioi-thieu-mang-resnet-vyDZOa7R5wj
+
+Link dataset: https://drive.google.com/drive/folders/17rpcGuwxVaYbriLvwLvZhlMB8szhJg4F?usp=sharing
 
 Teammate:
   Dang Tran Tan Luc - 22130158 (Leader)
@@ -29,8 +31,6 @@ Teammate:
   Phùng Khánh Duy - 22130062 
 
   Nguyen Thi Ngoc Diem - 22130038
-
-  Phung Khanh Duy - 22130062
 
   Vo Thi Cam Tu - 22130308
   
