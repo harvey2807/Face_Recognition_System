@@ -7,7 +7,7 @@ GUI: PyQt
 
 Database: Mysql
 
-Link trained model: https://drive.google.com/drive/folders/19caf9LhCZAH3Sw8BVgGXr2lLwqzvJEyU?usp=sharing
+Link trained model: https://drive.google.com/drive/folders/17rpcGuwxVaYbriLvwLvZhlMB8szhJg4F?usp=sharing
 
 You can download model in my drive and import into the project using keras.load_model because the model is over 100mb so i can not push to my git
 
@@ -23,7 +23,7 @@ This is documents about it: https://arxiv.org/pdf/1801.07698.
 
 This is documents about resnet: https://viblo.asia/p/gioi-thieu-mang-resnet-vyDZOa7R5wj
 
-Link dataset: https://drive.google.com/drive/folders/17rpcGuwxVaYbriLvwLvZhlMB8szhJg4F?usp=sharing
+Link dataset: https://drive.google.com/drive/folders/186b81JOettrzb-Re14NRwW0HQjC1WIQb
 
 Teammate:
   Dang Tran Tan Luc - 22130158 (Leader)
