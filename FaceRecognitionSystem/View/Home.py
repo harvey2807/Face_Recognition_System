@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QTabWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QVBoxLayout
+    QApplication, QWidget, QGridLayout, QTabWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QVBoxLayout, QStackedWidget
 )
 from PyQt6.QtCore import Qt, QTimer, QTime, QDate, QSize
 
@@ -19,6 +19,7 @@ from ResetPassword import ResetPasswordView
 class HomeView(QWidget):
     def __init__(self,stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.setWindowTitle('Face Recognition System')
         self.setGeometry(0, 0, 1200, 700)

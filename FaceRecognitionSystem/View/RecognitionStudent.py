@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QComboBox, QPushButton, QLineEdit, \
-    QGridLayout, QTextEdit
+    QGridLayout, QTextEdit, QStackedWidget
 import cv2
 import os
 from tensorflow.keras.models import load_model
@@ -22,6 +22,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 class RecognitionStudentView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.init_ui()
         #must use absolute path
@@ -124,9 +125,9 @@ class RecognitionStudentView(QWidget):
 
         # Thêm vào layout chọn thông tin
         choose_layout.addWidget(self.course_label)
-        choose_layout.addWidget(self.course_combo)
+        choose_layout.addWidget(self.classname)
         choose_layout.addWidget(self.class_label)
-        choose_layout.addWidget(self.class_combo)
+        choose_layout.addWidget(self.sessionname)
         choose_layout.addWidget(self.attendance_label)
         choose_layout.addWidget(self.attendance_combo)
         self.recognition_layout.addLayout(choose_layout)
@@ -303,14 +304,19 @@ class RecognitionStudentView(QWidget):
             )
             cursor = db.cursor()
 
+            
             # Truy vấn để lấy tên lớp học
+            name_class = self.classname.currentText().strip()
+            print(name_class)
             query = """
-                    SELECT sessionName
-                    FROM sessions 
-                    JOIN teachers t ON classes.TId = t.TID
-                    WHERE t.TID = %s
+                    SELECT COUNT(s.sessionId)
+                    FROM sessions s
+                    JOIN classes c ON s.CId = c.CId
+                    JOIN teachers t ON t.TID = c.TId
+                    WHERE t.TID = %s AND s.CId in (select CId from classes where nameC = %s)
+
                     """
-            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,))  # Lọc theo giáo viên
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,name_class))  # Lọc theo giáo viên
             results = cursor.fetchall()
 
             # Kiểm tra nếu không có kết quả
@@ -318,8 +324,14 @@ class RecognitionStudentView(QWidget):
                 print("Không có lớp học nào trong hệ thống.")
                 return session_names  # Trả về mảng rỗng
 
+
+            numberOfSessions = results[0][0]
+            print(f"Số lượng phiên: {numberOfSessions}")
             # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
-            session_names = [result[0] for result in results]  # result[0] là tên lớp học
+            session_range = list(range(1,numberOfSessions+1)) 
+            session_names = [str(i) for i in session_range]  # result[0] là tên lớp học
+            print(session_names)
+            return session_names
 
         except Exception as e:
             print(f"Lỗi khi tải dữ liệu: {e}")
