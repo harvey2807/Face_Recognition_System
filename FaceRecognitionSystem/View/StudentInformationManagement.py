@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem
+    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QStackedWidget
 
 )
 from PyQt6.QtCore import Qt, QDate
@@ -10,6 +10,7 @@ import MySQLdb as mdb
 class StudentInformationManagement(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         # Thiết lập tiêu đề và kích thước cửa sổ
         self.setWindowTitle("Quản lý thông tin Học sinh")

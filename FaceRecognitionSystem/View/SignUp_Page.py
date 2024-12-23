@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtCore import Qt, QTimer, QDate, QTime
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, \
-    QLineEdit, QPushButton, QMessageBox, QDateEdit, QRadioButton
+    QLineEdit, QPushButton, QMessageBox, QDateEdit, QRadioButton, QStackedWidget
 import MySQLdb as mdb
 
 class SignUpView(QWidget):
@@ -16,7 +16,7 @@ class SignUpView(QWidget):
         self.panel = QFrame(self.central_widget)
         self.header_panel = QFrame(self.panel)
         self.clock_panel = QFrame(self.header_panel)
-
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
 
         # Set the window title
