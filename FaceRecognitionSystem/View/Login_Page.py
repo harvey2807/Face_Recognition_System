@@ -238,6 +238,7 @@ class LoginView(QWidget):
         self.password_field.clear()
 
     def goHome(self):
+        print('da chay')
         home = HomeView(self)
         self.hide()
         self.stacked_widget.addWidget(home)  # Thêm HomeView vào stacked_widget

@@ -8,6 +8,7 @@ import csv
 class BaseTableWindow(QWidget):
     def __init__(self, title):
         super().__init__()
+        print('tao trang ..')
         self.setWindowTitle(title)
         self.setGeometry(50, 40, 1200, 700)
         self.setup_ui(title)

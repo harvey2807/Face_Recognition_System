@@ -16,6 +16,7 @@ from ResetPassword import ResetPasswordView
 
 class HomeView(QWidget):
     def __init__(self,stacked_widget):
+        print('tao trang home')
         super().__init__()
         self.stacked_widget = stacked_widget
         self.setWindowTitle('Face Recognition System')

@@ -26,7 +26,7 @@ class SystemStatistics(QMainWindow):
         tab_widget = QTabWidget(self)
 
         tab_widget.clear()  # Xóa các tab cũ
-        tab_widget.addTab(self.create_statistics_tab(), "Thống kê")
+        # tab_widget.addTab(self.create_statistics_tab(), "Thống kê")
         tab_widget.addTab(self.create_no_attendance_tab(), "Học sinh vắng")
         tab_widget.addTab(self.create_attendance_tab(), "Học sinh đã điểm danh")
 
