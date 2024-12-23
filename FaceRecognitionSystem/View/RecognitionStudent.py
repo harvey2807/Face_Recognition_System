@@ -240,8 +240,6 @@ class RecognitionStudentView(QWidget):
 
     def face_extractor(self, img):
 
-        # classifier = load_model("D:\Python\Py_project\FaceRecognitionSystem\model.keras")
-
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = face_cascade.detectMultiScale(img, 1.3, 5)
         if len(faces) == 0:
@@ -283,10 +281,6 @@ class RecognitionStudentView(QWidget):
             
             for (x, y, w, h) in faces:
             #     # draw rectangle around face
-            #     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
-            #     cropped_face = frame[y:y + h, x:x + w]
-                # return cropped_face
-                # self.update_face_recognitioned(cropped_face)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
                 height, width, channel = frame.shape
                 step = channel * width
@@ -321,7 +315,7 @@ class RecognitionStudentView(QWidget):
             
                 #set org
 
-                cv2.putText(frame1, str(self.mapIdtoName[int(name)-1]), (0, 15), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 1)
+                cv2.putText(frame1, self.mapIdtoName[int(name)-1], (0, 15), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 1)
                 
                 if name in self.fronter:
                     self.fronter.append(name)
@@ -345,73 +339,6 @@ class RecognitionStudentView(QWidget):
                     self.count = 0
             except Exception as e:
                 print(f"Error during face processing: {e}")
-
-
-    # def update_frame(self):
-    #     ret, frame = self.camera.read()
-    #     if ret:
-    #         # Convert frame from BGR (OpenCV) to RGB (Qt)
-    #         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    #         # Call face_extractor to get face region
-    #         face = self.face_extractor(frame_rgb)
-    #         if face is not None:
-    #             try:
-    #                 # Resize the face image to fit model input
-    #                 face_resized = cv2.resize(face, (224, 224))
-    #                 im = Image.fromarray(face_resized, 'RGB')
-    #                 img_array = np.array(im)
-    #                 img_array = np.expand_dims(img_array, axis=0) / 255.0
-
-    #                 pred = self.model.predict(img_array)
-    #                 predicted_class = np.argmax(pred, axis=1)
-    #                 name = self.label_map[predicted_class[0]]
-
-    #                 #set org
-    #                 cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-    #             except Exception as e:
-    #                 print(f"Error during face processing: {e}")
-    #         else:
-    #             cv2.putText(frame_rgb, "No face detected", (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-
-    #         height, width, channel = frame_rgb.shape
-    #         step = channel * width
-    #         q_image = QImage(frame_rgb.data, width, height, step, QImage.Format.Format_RGB888)
-    #         self.camera_feed.setPixmap(QPixmap.fromImage(q_image))
-
-
-    def update_frame(self):
-        ret, frame = self.camera.read()
-        if ret:
-            # Convert frame from BGR (OpenCV) to RGB (Qt)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # Call face_extractor to get face region
-            face = self.face_extractor(frame_rgb)
-            if face is not None:
-                try:
-                    # Resize the face image to fit model input
-                    face_resized = cv2.resize(face, (224, 224))
-                    im = Image.fromarray(face_resized, 'RGB')
-                    img_array = np.array(im)
-                    img_array = np.expand_dims(img_array, axis=0) / 255.0
-
-                    pred = self.model.predict(img_array)
-                    predicted_class = np.argmax(pred, axis=1)
-                    name = self.label_map[predicted_class[0]]
-
-                    #set org
-                    cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-
-                except Exception as e:
-                    print(f"Error during face processing: {e}")
-            else:
-                cv2.putText(frame_rgb, "No face detected", (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-
-            height, width, channel = frame_rgb.shape
-            step = channel * width
-            q_image = QImage(frame_rgb.data, width, height, step, QImage.Format.Format_RGB888)
-            self.camera_feed.setPixmap(QPixmap.fromImage(q_image))
 
 
     def closeEvent(self, event):

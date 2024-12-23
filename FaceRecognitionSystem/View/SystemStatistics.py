@@ -113,7 +113,7 @@ class SystemStatistics(QMainWindow):
         SELECT c.nameC, COUNT(ss.SId) AS present_students_count
         FROM classes c
         JOIN sessions s ON c.CId = s.CId
-        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
+        JOIN studentsinsessions ss ON s.sessionId = ss.sessionId
         WHERE ss.attendance = 'present'
         GROUP BY c.CId;
         """
@@ -159,7 +159,11 @@ class SystemStatistics(QMainWindow):
         miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]
 
         width = 0.35
-        indices = range(len(x))
+        indices = list(range(len(x)))
+        print(x)
+        print(f"indices: {indices}, length: {len(indices)}")
+        print(f"miss: {miss}, length: {len(miss)}")
+
 
         ax.bar([i - width / 2 for i in indices], sumst, width=width, color="#F29CA3", label="Số học sinh điểm danh")
         ax.bar([i + width / 2 for i in indices], miss, width=width, color="#64113F", label="Số học sinh vắng")
