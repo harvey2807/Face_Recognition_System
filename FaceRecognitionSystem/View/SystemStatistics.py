@@ -110,30 +110,42 @@ class SystemStatistics(QMainWindow):
         cursor = db.cursor()
 
         query1 = """
-            SELECT CId, COUNT(SId) AS HocSinhCoDiemDanh
-            FROM studentsofclass
-            GROUP BY CId;
+        SELECT c.nameC, COUNT(ss.SId) AS present_students_count
+        FROM classes c
+        JOIN sessions s ON c.CId = s.CId
+        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
+        WHERE ss.attendance = 'present'
+        GROUP BY c.CId;
         """
+
         cursor.execute(query1)
         data1 = cursor.fetchall()
         hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}
 
+
+        # Truy vấn số học sinh vắng cho mỗi lớp
+
         query2 = """
-            SELECT sc.CId, 
-            (SELECT COUNT(*) 
-            FROM students s 
-            WHERE s.SId NOT IN (SELECT SId FROM studentsofclass WHERE CId = sc.CId)
-            ) AS SoHocSinhVang
-            FROM classes sc;
+        SELECT c.nameC, COUNT(ss.SId) AS absent_students_count
+        FROM classes c
+        JOIN sessions s ON c.CId = s.CId
+        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
+        WHERE ss.attendance = 'absent'
+        GROUP BY c.CId;
+
         """
+
         cursor.execute(query2)
         data2 = cursor.fetchall()
         hoc_sinh_vang = {row[0]: row[1] for row in data2}
 
+
         query4 = """
-            SELECT CId, nameC
-            FROM classes
+        SELECT c.CId, c.nameC
+        FROM classes c
+        ORDER BY c.CId;
         """
+
         cursor.execute(query4)
         data4 = cursor.fetchall()
         class_names = {row[0]: row[1] for row in data4}
@@ -141,6 +153,7 @@ class SystemStatistics(QMainWindow):
         cursor.close()
         db.close()
 
+        # Xử lý dữ liệu cho biểu đồ
         x = [class_names.get(c, str(c)) for c in hoc_sinh_co_diem_danh.keys()]
         sumst = [hoc_sinh_co_diem_danh.get(c, 0) for c in hoc_sinh_co_diem_danh.keys()]
         miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]
@@ -154,9 +167,9 @@ class SystemStatistics(QMainWindow):
         ax.set_xticks(indices)
         ax.set_xticklabels(x, rotation=0, ha="right")
 
-        ax.set_title("Thống kê học sinh theo buổi học", fontsize=18, fontweight="bold", pad=20)
+        ax.set_title("Thống kê học sinh theo lớp học", fontsize=18, fontweight="bold", pad=20)
         ax.set_ylabel("Số học sinh", fontsize=12, labelpad=10)
-        ax.set_xlabel("Buổi học", fontsize=12, labelpad=10)
+        ax.set_xlabel("Lớp học", fontsize=12, labelpad=10)
         ax.tick_params(axis="both", labelsize=10)
 
         # Di chuyển chú thích ra bên ngoài
