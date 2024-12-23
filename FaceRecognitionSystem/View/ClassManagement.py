@@ -1,19 +1,23 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QMessageBox
+    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QMessageBox, QDialog, QStackedWidget
+
 
 )
 from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
 
 import Global
+
 from Global import GLOBAL_ACCOUNTID
+
 
 
 class ClassManagementView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         # Thiết lập tiêu đề và kích thước cửa sổ
         self.setWindowTitle("Quản lý thông tin Học sinh")
@@ -123,12 +127,19 @@ class ClassManagementView(QWidget):
 
         # Các nút chức năng (Lưu, Sửa, Xóa)
         button_layout = QHBoxLayout()
+
+        self.addclass_button = QPushButton("Thêm lớp học")
+        self.addclass_button.setStyleSheet("background-color: black; color: white;")
+
         self.save_button = QPushButton("Lưu")
         self.save_button.setStyleSheet("background-color: black; color: white;")
         self.edit_button = QPushButton("Sửa")
         self.edit_button.setStyleSheet("background-color: black; color: white;")
         self.delete_button = QPushButton("Xóa")
         self.delete_button.setStyleSheet("background-color: black; color: white;")
+
+        button_layout.addWidget(self.addclass_button)
+
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.edit_button)
         button_layout.addWidget(self.delete_button)
@@ -176,6 +187,8 @@ class ClassManagementView(QWidget):
 
         # Đặt outer_layout làm layout chính của cửa sổ
         self.setLayout(outer_layout)
+
+        self.addclass_button.clicked.connect(self.add_class_popup)
 
         self.save_button.clicked.connect(self.save_student)
         self.edit_button.clicked.connect(self.edit_student)
@@ -469,4 +482,69 @@ class ClassManagementView(QWidget):
             cursor.close()
             db.close()
 
+
         return class_names
+
+    def add_class_popup(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Thêm Lớp Học")
+        dialog.setFixedSize(300, 150)
+
+        layout = QVBoxLayout()
+
+        # Nhãn và ô nhập tên lớp học
+        label = QLabel("Nhập tên lớp học:")
+        class_name_input = QLineEdit()
+        class_name_input.setPlaceholderText("Tên lớp học...")
+
+        # Tạo layout hàng ngang cho nút
+        button_layout = QHBoxLayout()
+        add_button = QPushButton("Thêm")
+        cancel_button = QPushButton("Hủy")
+        button_layout.addWidget(add_button)
+        button_layout.addWidget(cancel_button)
+
+        # Thêm các thành phần vào layout chính
+        layout.addWidget(label)
+        layout.addWidget(class_name_input)
+        layout.addLayout(button_layout)
+
+        dialog.setLayout(layout)
+
+        # Hàm xử lý thêm lớp học
+        def handle_add_class():
+            class_name = class_name_input.text().strip()
+            if not class_name:
+                QMessageBox.warning(dialog, "Lỗi", "Tên lớp học không được để trống!")
+                return
+
+            try:
+                db = mdb.connect(
+                    host='localhost',
+                    user='root',
+                    passwd='',
+                    db="facerecognitionsystem"
+                )
+                cursor = db.cursor()
+
+                # Thực hiện truy vấn để thêm lớp học
+                query = "INSERT INTO classes (nameC, TId) VALUES (%s, %s)"
+                cursor.execute(query, (class_name, Global.GLOBAL_ACCOUNTID))
+                db.commit()
+
+                QMessageBox.information(dialog, "Thành công", "Lớp học đã được thêm thành công!")
+                self.classname.addItem(class_name)  # Cập nhật combobox
+                dialog.accept()  # Đóng popup
+
+            except Exception as e:
+                QMessageBox.critical(dialog, "Lỗi", f"Lỗi khi thêm lớp học: {e}")
+            finally:
+                cursor.close()
+                db.close()
+
+        # Kết nối sự kiện cho nút
+        add_button.clicked.connect(handle_add_class)
+        cancel_button.clicked.connect(dialog.reject)
+
+        dialog.exec()
+

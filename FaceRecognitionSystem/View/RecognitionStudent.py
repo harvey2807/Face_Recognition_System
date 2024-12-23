@@ -3,20 +3,26 @@ import sys
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QComboBox, QPushButton, QLineEdit, \
-    QGridLayout, QTextEdit
+    QGridLayout, QTextEdit, QStackedWidget
 import cv2
 import os
 from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import MySQLdb as mdb
+
 from PyQt6.QtCore import  QTime
+
+import Global
+
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
 
 class RecognitionStudentView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.init_ui()
         #must use absolute path
@@ -28,7 +34,9 @@ class RecognitionStudentView(QWidget):
         )
         cursor = db.cursor()
 
-        self.model = load_model("D:\python\FaceRecognitionSystem\model.keras")
+
+        self.model = load_model("D:\Python\model.keras")
+
 
         self.count = 0
         self.fronter = []
@@ -93,15 +101,17 @@ class RecognitionStudentView(QWidget):
         choose_layout = QHBoxLayout()
         self.course_label = QLabel("Chọn Lớp:")
         self.course_label.setStyleSheet("border: none")
-        self.course_combo = QComboBox()
-        self.course_combo.addItems(["Cấu trúc dữ liệu", "Python"])
-        self.course_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.classname = QComboBox()
+        class_names = self.loadClassData()
+        self.classname.addItems(class_names)
+        self.classname.setStyleSheet("padding: 5px; border: 1px solid gray;")
 
         self.class_label = QLabel("Chọn Buổi:")
         self.class_label.setStyleSheet("border: none")
-        self.class_combo = QComboBox()
-        self.class_combo.addItems(["1", "2", "3"])
-        self.class_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.sessionname = QComboBox()
+        session_name = self.loadSessionData()
+        self.sessionname.addItems(session_name)
+        self.sessionname.setStyleSheet("padding: 5px; border: 1px solid gray;")
 
         self.attendance_label = QLabel("Loại Điểm Danh:")
         self.attendance_label.setStyleSheet("border: none")
@@ -111,9 +121,9 @@ class RecognitionStudentView(QWidget):
 
         # Thêm vào layout chọn thông tin
         choose_layout.addWidget(self.course_label)
-        choose_layout.addWidget(self.course_combo)
+        choose_layout.addWidget(self.classname)
         choose_layout.addWidget(self.class_label)
-        choose_layout.addWidget(self.class_combo)
+        choose_layout.addWidget(self.sessionname)
         choose_layout.addWidget(self.attendance_label)
         choose_layout.addWidget(self.attendance_combo)
         self.recognition_layout.addLayout(choose_layout)
@@ -239,8 +249,103 @@ class RecognitionStudentView(QWidget):
 
         self.setLayout(self.grid_layout)
 
-    def remove_inf(self,):
-        pass
+
+    def loadClassData(self):
+        # Mảng để chứa dữ liệu
+        class_names = []
+        print(Global.GLOBAL_ACCOUNTID)
+
+        try:
+            # Kết nối đến cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+
+            # Truy vấn để lấy tên lớp học
+            query = """
+                    SELECT nameC
+                    FROM classes 
+                    JOIN teachers t ON classes.TId = t.TID
+                    WHERE t.TID = %s
+                    """
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,))  # Lọc theo giáo viên
+            results = cursor.fetchall()
+
+            # Kiểm tra nếu không có kết quả
+            if not results:
+                print("Không có lớp học nào trong hệ thống.")
+                return class_names  # Trả về mảng rỗng
+
+            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
+            class_names = [result[0] for result in results]  # result[0] là tên lớp học
+
+        except Exception as e:
+            print(f"Lỗi khi tải dữ liệu: {e}")
+
+        finally:
+            # Đóng kết nối và cursor
+            cursor.close()
+            db.close()
+
+        return class_names
+
+    def loadSessionData(self):
+        # Mảng để chứa dữ liệu
+        session_names = []
+        print(Global.GLOBAL_ACCOUNTID)
+
+        try:
+            # Kết nối đến cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+
+            
+            # Truy vấn để lấy tên lớp học
+            name_class = self.classname.currentText().strip()
+            print(name_class)
+            query = """
+                    SELECT COUNT(s.sessionId)
+                    FROM sessions s
+                    JOIN classes c ON s.CId = c.CId
+                    JOIN teachers t ON t.TID = c.TId
+                    WHERE t.TID = %s AND s.CId in (select CId from classes where nameC = %s)
+
+                    """
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,name_class))  # Lọc theo giáo viên
+            results = cursor.fetchall()
+
+            # Kiểm tra nếu không có kết quả
+            if not results:
+                print("Không có lớp học nào trong hệ thống.")
+                return session_names  # Trả về mảng rỗng
+
+
+            numberOfSessions = results[0][0]
+            print(f"Số lượng phiên: {numberOfSessions}")
+            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
+            session_range = list(range(1,numberOfSessions+1)) 
+            session_names = [str(i) for i in session_range]  # result[0] là tên lớp học
+            print(session_names)
+            return session_names
+
+        except Exception as e:
+            print(f"Lỗi khi tải dữ liệu: {e}")
+
+        finally:
+            # Đóng kết nối và cursor
+            cursor.close()
+            db.close()
+
+        return session_names
 
     def face_extractor(self, img):
 
