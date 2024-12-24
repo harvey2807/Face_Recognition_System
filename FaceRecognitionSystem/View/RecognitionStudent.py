@@ -34,10 +34,14 @@ class RecognitionStudentView(QWidget):
         )
         cursor = db.cursor()
 
-        self.model = load_model("D:\Python\model.keras")
+
+        self.model = load_model("D:\python\FaceRecognitionSystem\model.keras")
+
 
         self.count = 0
-        self.fronter = []
+        self.recognition_name =0
+        self.fronter = [None]*5
+        print(self.fronter)
 
         cursor.execute("select SId, nameSt from students")
         rows = cursor.fetchall()    
@@ -45,19 +49,15 @@ class RecognitionStudentView(QWidget):
         names = [item[1] for item in rows]
         print(names)
         print(ids)
+
         self.mapIdtoName = {}
+
         for i in range(len(ids)):
             self.mapIdtoName[ids[i]] =  names[i]
         print(self.mapIdtoName)
-        # self.label_map = ['DangTranTanLuc', 'Nguyen Thi Ngoc Diem', 'Phung Khanh Duy',
-        #                   'VoNguyenThanhDieu',
-        #                   'VoThiCamTu']
         self.label_map = ids
-        # for n in names:
-        #     print(n)
 
     def init_ui(self):
-        # Định nghĩa CSS để tạo giao diện
         self.setStyleSheet("""
                 QWidget {
                         background-color: white;
@@ -156,8 +156,15 @@ class RecognitionStudentView(QWidget):
         self.close_camera_btn.setStyleSheet("background-color: #F44336; color: white; padding: 10px;")
         self.close_camera_btn.clicked.connect(self.toggle_camera)
 
+        # camera_buttons_layout = QHBoxLayout()
+        self.reset_recognition = QPushButton("Nhận diện lại")
+        self.reset_recognition.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
+        self.reset_recognition.clicked.connect(self.remove_inf)
+
         camera_buttons_layout.addWidget(self.open_camera_btn)
         camera_buttons_layout.addWidget(self.close_camera_btn)
+        camera_buttons_layout.addWidget(self.reset_recognition)
+        
         self.recognition_layout.addLayout(camera_buttons_layout)
 
         # Thêm màn hình nhận diện vào main layout
@@ -245,6 +252,7 @@ class RecognitionStudentView(QWidget):
         self.grid_layout.setColumnStretch(1, 1)  # infor_content chiếm 1 phần
 
         self.setLayout(self.grid_layout)
+
 
     def loadClassData(self):
         # Mảng để chứa dữ liệu
@@ -343,6 +351,7 @@ class RecognitionStudentView(QWidget):
 
         return session_names
 
+
     def face_extractor(self, img):
 
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -366,7 +375,7 @@ class RecognitionStudentView(QWidget):
                 self.camera_feed.setText("Không thể mở camera")
                 return
             self.is_camera_active = True
-            self.timer.start(10)  # Cập nhật khung hình mỗi 30ms
+            self.timer.start(10)  # Cập nhật khung hình mỗi 10ms
         else:
             # Tắt camera
             self.timer.stop()
@@ -398,6 +407,10 @@ class RecognitionStudentView(QWidget):
 
                 self.update_face_recognitioned(face, frame)
 
+
+  
+          
+
     def update_face_recognitioned(self, face_img, frame1):
       
         image_recognition = face_img
@@ -417,6 +430,8 @@ class RecognitionStudentView(QWidget):
                 pred = self.model.predict(img_array)
                 predicted_class = np.argmax(pred, axis=1)
                 name = self.label_map[predicted_class[0]]
+
+                self.recognition_name = name
             
                 #set org
 
@@ -431,7 +446,12 @@ class RecognitionStudentView(QWidget):
                 q_image = QImage(frame.data, 224, 224, step, QImage.Format.Format_RGB888)
                 if name not in self.fronter:
                     if self.count < 1:
-                        self.fronter.append(name)
+                        for i in range(5):
+                            if self.fronter is None:
+                                self.fronter[i]= name
+                            # self.fronter.append(name)
+                                print("name", self.fronter)
+                                break
                         #Hiển thị thông tin học sinh đã điểm danh lên màn hình
                         self.id_input.setText(str(name))
                         self.name_input.setText(self.mapIdtoName[int(name)-1])
@@ -444,6 +464,25 @@ class RecognitionStudentView(QWidget):
                     self.count = 0
             except Exception as e:
                 print(f"Error during face processing: {e}")
+
+    def remove_inf(self):
+
+        name = self.recognition_name  
+    
+        self.id_input.clear()
+        self.name_input.clear()
+        self.time_input.clear()
+        self.label_image.setPixmap(QPixmap())
+
+        if name in self.fronter:
+            for i in range(5):
+                if self.fronter != None:
+                    if self.fronter[i] == name:
+                        self.fronter.remove(name)
+                        print(self.fronter)
+        self.count = 0
+        print("Thông tin đã được xóa và nhận diện lại.")
+        print("have not recognition_name")
 
 
     def closeEvent(self, event):
