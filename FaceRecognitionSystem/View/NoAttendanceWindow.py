@@ -21,14 +21,15 @@ class NoAttendanceWindow(BaseTableWindow):
 
         # Truy vấn dữ liệu
         query = """
-        SELECT s.SId, s.nameSt, c.nameC, c.dateC
+        -- học sinh vắng mặt theo lớp
+        SELECT c.nameC, s.SId,s.nameSt ,ses.sessionName ,ses.sessionDate 
         FROM classes c
-        LEFT JOIN students s 
-            ON s.SId NOT IN (
-                SELECT SId FROM studentsofclass WHERE CId = c.CId
-            )
-        WHERE s.SId IS NOT NULL
-        ORDER BY s.SId ASC
+        JOIN sessions ses ON c.CId = ses.CId
+        JOIN studentsInSessions ss ON ses.sessionId = ss.sessionId
+        JOIN students s ON ss.SId = s.SId
+        WHERE ss.attendance = 'absent'
+        ORDER BY c.CId, ses.sessionId, s.nameSt;
+
         """
         cursor.execute(query)
         data = cursor.fetchall()

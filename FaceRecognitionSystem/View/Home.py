@@ -2,11 +2,13 @@ import sys
 
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QTabWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QVBoxLayout
+    QApplication, QWidget, QGridLayout, QTabWidget, QPushButton, QLabel, QFrame, QHBoxLayout, QVBoxLayout, QStackedWidget
 )
 from PyQt6.QtCore import Qt, QTimer, QTime, QDate, QSize
 
-from FaceRecognitionSystem.View import Global
+
+import Global
+
 from StudentInformationManagement import StudentInformationManagement
 from ClassManagement import ClassManagementView
 from SystemStatistics import SystemStatistics
@@ -17,6 +19,7 @@ from ResetPassword import ResetPasswordView
 class HomeView(QWidget):
     def __init__(self,stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.setWindowTitle('Face Recognition System')
         self.setGeometry(0, 0, 1200, 700)
@@ -144,6 +147,7 @@ class HomeView(QWidget):
         self.update_time()
 
     def logout_action(self):
+
         self.stacked_widget.setCurrentIndex(0)
         Global.GLOBAL_ACCOUNT = None
         Global.GLOBAL_ACCOUNTID = None

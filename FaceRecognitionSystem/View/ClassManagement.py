@@ -1,19 +1,23 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QMessageBox, QDialog
+    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QMessageBox, QDialog, QStackedWidget
+
 
 )
 from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
 
 import Global
-from FaceRecognitionSystem.View.Global import GLOBAL_ACCOUNTID
+
+from Global import GLOBAL_ACCOUNTID
+
 
 
 class ClassManagementView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         # Thiết lập tiêu đề và kích thước cửa sổ
         self.setWindowTitle("Quản lý thông tin Học sinh")
@@ -123,15 +127,19 @@ class ClassManagementView(QWidget):
 
         # Các nút chức năng (Lưu, Sửa, Xóa)
         button_layout = QHBoxLayout()
+
         self.addclass_button = QPushButton("Thêm lớp học")
         self.addclass_button.setStyleSheet("background-color: black; color: white;")
+
         self.save_button = QPushButton("Lưu")
         self.save_button.setStyleSheet("background-color: black; color: white;")
         self.edit_button = QPushButton("Sửa")
         self.edit_button.setStyleSheet("background-color: black; color: white;")
         self.delete_button = QPushButton("Xóa")
         self.delete_button.setStyleSheet("background-color: black; color: white;")
+
         button_layout.addWidget(self.addclass_button)
+
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.edit_button)
         button_layout.addWidget(self.delete_button)
@@ -179,7 +187,9 @@ class ClassManagementView(QWidget):
 
         # Đặt outer_layout làm layout chính của cửa sổ
         self.setLayout(outer_layout)
+
         self.addclass_button.clicked.connect(self.add_class_popup)
+
         self.save_button.clicked.connect(self.save_student)
         self.edit_button.clicked.connect(self.edit_student)
         self.delete_button.clicked.connect(self.delete_student)
@@ -472,6 +482,7 @@ class ClassManagementView(QWidget):
             cursor.close()
             db.close()
 
+
         return class_names
 
     def add_class_popup(self):
@@ -536,3 +547,4 @@ class ClassManagementView(QWidget):
         cancel_button.clicked.connect(dialog.reject)
 
         dialog.exec()
+

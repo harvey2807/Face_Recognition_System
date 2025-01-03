@@ -2,13 +2,14 @@ import sys
 from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, \
-    QGraphicsDropShadowEffect, QLineEdit, QDateEdit, QGroupBox, QRadioButton, QMessageBox
+    QGraphicsDropShadowEffect, QLineEdit, QDateEdit, QGroupBox, QRadioButton, QMessageBox, QStackedWidget
 import MySQLdb as mdb
 
 
 class ProfileView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.username = ''
         self.dob = ''

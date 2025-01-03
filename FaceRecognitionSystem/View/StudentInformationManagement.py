@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem
+    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QStackedWidget
 
 )
 from PyQt6.QtCore import Qt, QDate
@@ -10,6 +10,7 @@ import MySQLdb as mdb
 class StudentInformationManagement(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         # Thiết lập tiêu đề và kích thước cửa sổ
         self.setWindowTitle("Quản lý thông tin Học sinh")
@@ -191,7 +192,6 @@ class StudentInformationManagement(QWidget):
         self.view_all_button.clicked.connect(self.view_all_students)
 
 
-
     def reset_fields(self):
         self.id_input.clear()
         self.name_input.clear()
@@ -238,13 +238,13 @@ class StudentInformationManagement(QWidget):
             self.reset_fields()
         except Exception as e:
             print(f"Lỗi khi lưu học sinh: {e}")
-
-
         cursor.close()
         db.close()
 
     def edit_student(self):
+
     # Kiểm tra dữ liệu ID
+
         student_id = self.id_input.text().strip()
         if not student_id:
             print("ID Học sinh không được để trống!")
@@ -269,7 +269,6 @@ class StudentInformationManagement(QWidget):
             phone = self.phone_input.text().strip()
             address = self.address_input.text().strip()
 
-            
             # Kiểm tra dữ liệu đầu vào
             if not name or not student_class or not cccd:
                 print("Vui lòng nhập đầy đủ thông tin cần thiết!")
@@ -300,7 +299,8 @@ class StudentInformationManagement(QWidget):
         finally:
             cursor.close()
             db.close()
-# nút xóa
+
+    # nút xóa
     def delete_student(self):
         student_id = self.id_input.text().strip()
         if not student_id:
@@ -329,8 +329,8 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
-
 # tìm kiếm
+
     def search_student(self):
         keyword = self.search_input.text()
         if not keyword:
@@ -348,7 +348,8 @@ class StudentInformationManagement(QWidget):
             query = "SELECT SId, nameSt, CCCD, gender, class FROM students WHERE SId = %s"
             cursor.execute(query, (keyword,))
             results = cursor.fetchall()
-            
+
+
             # Cập nhật bảng
             self.table.setRowCount(len(results))
             for row_idx, row_data in enumerate(results):
@@ -360,7 +361,8 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
-# xem tất cả
+    # xem tất cả
+
     def view_all_students(self):
         try:
             db = mdb.connect(
@@ -390,3 +392,4 @@ class StudentInformationManagement(QWidget):
         finally:
             cursor.close()
             db.close()
+
