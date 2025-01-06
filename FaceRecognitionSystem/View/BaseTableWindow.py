@@ -14,6 +14,7 @@ class BaseTableWindow(QWidget):
         self.setGeometry(50, 40, 1200, 700)
         self.setup_ui(title)
         self.setStyleSheet("background-color: white; color:black;")
+        self.searched_class_name = ""  # Thêm thuộc tính lưu tên lớp đã tìm kiếm
 
     def setup_ui(self, title):
         layout = QVBoxLayout()
@@ -101,9 +102,6 @@ class BaseTableWindow(QWidget):
         container.setLayout(layout)
         self.setLayout(layout)  # Đặt layout vào widget cha
 
-        # Hàm xử lý khi nhấn nút Xuất excel.
-        # Thực hiện việc ghi dữ liệu từ bảng ra tệp excel.
-
     def export_to_excel(self):
         # Hiển thị hộp thoại để chọn vị trí lưu tệp Excel
         file_path, _ = QFileDialog.getSaveFileName(
@@ -138,6 +136,10 @@ class BaseTableWindow(QWidget):
                         session = session_item.text()
                         date = date_item.text()
 
+                        # Kiểm tra nếu có lớp tìm kiếm thì chỉ xuất dữ liệu của lớp đó
+                        if self.searched_class_name and self.searched_class_name != class_name:
+                            continue  # Bỏ qua lớp không phải lớp đang tìm kiếm
+
                         key = (student_id, student_name, class_name)  # Thêm "Tên lớp" vào khóa nhóm
                         if key not in data_grouped:
                             data_grouped[key] = {"count": 0, "dates": []}
@@ -161,13 +163,13 @@ class BaseTableWindow(QWidget):
         else:
             print("Người dùng đã hủy thao tác xuất Excel.")
 
-    # Tìm kiếm trong bảng theo ID nhập vào.
     def search_by_id_or_class_name(self):
         search_text = self.search_input.text().strip()  # Lấy nội dung tìm kiếm
         if not search_text:
             print("Vui lòng nhập ID hoặc Tên lớp để tìm kiếm.")
             return
 
+        self.searched_class_name = search_text  # Lưu tên lớp tìm kiếm
         found = False
         for row in range(self.table.rowCount()):
             # Lấy giá trị ở cột Tên lớp (cột 0) và ID học sinh (cột 1)
@@ -184,7 +186,7 @@ class BaseTableWindow(QWidget):
         if not found:
             print(f"Không tìm thấy kết quả phù hợp với: {search_text}")
 
-    # Hiển thị lại tất cả các hàng.
     def view_all_rows(self):
+        self.searched_class_name = ""  # Reset khi xem lại tất cả
         for row in range(self.table.rowCount()):
             self.table.setRowHidden(row, False)
