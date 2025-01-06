@@ -3,23 +3,28 @@ import sys
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QComboBox, QPushButton, QLineEdit, \
-    QGridLayout, QTextEdit
+    QGridLayout, QTextEdit, QStackedWidget, QTableWidget, QHeaderView, QTabWidget, QTableWidgetItem
 import cv2
 import os
 from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import MySQLdb as mdb
-from PyQt6.QtCore import  QTime
+
+from PyQt6.QtCore import QTime
+
+import Global
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
 
 class RecognitionStudentView(QWidget):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.init_ui()
-        #must use absolute path
+        # must use absolute path
         db = mdb.connect(
             host='localhost',
             user='root',
@@ -28,30 +33,28 @@ class RecognitionStudentView(QWidget):
         )
         cursor = db.cursor()
 
-        self.model = load_model("D:\python\FaceRecognitionSystem\model.keras")
+        self.model = load_model("D:\Python\model.keras")
 
         self.count = 0
+        self.recognition_name = 0
         self.fronter = []
+        print(self.fronter)
 
         cursor.execute("select SId, nameSt from students")
-        rows = cursor.fetchall()    
+        rows = cursor.fetchall()
         ids = [item[0] for item in rows]
         names = [item[1] for item in rows]
         print(names)
         print(ids)
+
         self.mapIdtoName = {}
+
         for i in range(len(ids)):
-            self.mapIdtoName[ids[i]] =  names[i]
+            self.mapIdtoName[ids[i]] = names[i]
         print(self.mapIdtoName)
-        # self.label_map = ['DangTranTanLuc', 'Nguyen Thi Ngoc Diem', 'Phung Khanh Duy',
-        #                   'VoNguyenThanhDieu',
-        #                   'VoThiCamTu']
         self.label_map = ids
-        # for n in names:
-        #     print(n)
 
     def init_ui(self):
-        # Định nghĩa CSS để tạo giao diện
         self.setStyleSheet("""
                 QWidget {
                         background-color: white;
@@ -97,40 +100,68 @@ class RecognitionStudentView(QWidget):
 
         # Combobox để chọn lớp và loại điểm danh
         choose_layout = QHBoxLayout()
-        self.course_label = QLabel("Chọn Lớp:")
+        self.course_label = QLabel("Lớp:")
+        self.course_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.course_label.setStyleSheet("border: none")
-        self.course_combo = QComboBox()
-        self.course_combo.addItems(["Cấu trúc dữ liệu", "Python"])
-        self.course_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.classname = QLabel("Lập trình Python")
+        class_names = self.loadClassData()
+        # self.classname.addItems(class_names)
+        self.classname.setStyleSheet("padding:1px 2px; border: 1px solid gray;")
+        self.classname.setFixedHeight(25)
 
-        self.class_label = QLabel("Chọn Buổi:")
+        self.class_label = QLabel("Buổi:")
+        self.class_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.class_label.setStyleSheet("border: none")
-        self.class_combo = QComboBox()
-        self.class_combo.addItems(["1", "2", "3"])
-        self.class_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
-
-        self.attendance_label = QLabel("Loại Điểm Danh:")
-        self.attendance_label.setStyleSheet("border: none")
-        self.attendance_combo = QComboBox()
-        self.attendance_combo.addItems(["Vào", "Ra"])
-        self.attendance_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.sessionname = QLabel("1")
+        session_name = self.loadSessionData()
+        # self.sessionname.addItems(session_name)
+        self.sessionname.setStyleSheet("padding:1px 2px; border: 1px solid gray;")
+        self.sessionname.setFixedHeight(25)
 
         # Thêm vào layout chọn thông tin
         choose_layout.addWidget(self.course_label)
-        choose_layout.addWidget(self.course_combo)
+        choose_layout.addWidget(self.classname)
         choose_layout.addWidget(self.class_label)
-        choose_layout.addWidget(self.class_combo)
-        choose_layout.addWidget(self.attendance_label)
-        choose_layout.addWidget(self.attendance_combo)
+        choose_layout.addWidget(self.sessionname)
         self.recognition_layout.addLayout(choose_layout)
+
+        self.stack_widget = QWidget(self)
+        self.stack_widget.setStyleSheet("background-color: white;")
+        # self.stack_widget.setGeometry(0,50,700,450)
+
+        self.stack_layout = QVBoxLayout(self.stack_widget)
+        self.stack_widget.setLayout(self.stack_layout)
+
+        self.tab = QTabWidget(self)
+        self.tab.setStyleSheet("""
+            QTabBar::tab:selected { 
+                background: white; 
+                border-bottom: 1px solid #0078D7;
+                padding: 5px;
+            }
+        """)
+
+        # Chứa danh sách các sinh viên đã điểm danh
+        self.table = QTableWidget(0, 3)  # Bảng chứa kết quả tìm kiếm
+        self.table.setHorizontalHeaderLabels(["ID", "Tên sinh viên", "Thời gian"])  # Đặt tên các cột
+        self.table.setFixedSize(700, 360)
+        # Điều chỉnh kích thước các cột trong bảng
+        header = self.table.horizontalHeader()
+        for i in range(self.table.columnCount()):
+            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Stretch)
 
         # Camera feed
         self.camera_feed = QLabel()
         self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # self.camera_feed.setPixmap(QPixmap("../Image/img.png").scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio))
-        # self.camera_feed.setStyleSheet("border: 1px solid blue; text-align: center;")
+        self.camera_feed.setStyleSheet("border: 1px solid black; text-align: center; border-radius: 3px;")
         self.camera_feed.setFixedSize(700, 360)
-        self.recognition_layout.addWidget(self.camera_feed, alignment=Qt.AlignmentFlag.AlignCenter)
+        # self.recognition_layout.addWidget(self.camera_feed, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.tab.addTab(self.camera_feed, 'Nhận diện')
+        self.tab.addTab(self.table, 'Thông tin điểm danh')
+
+        self.recognition_layout.addWidget(self.tab, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Khởi tạo camera và timer
         self.camera = None
@@ -138,18 +169,32 @@ class RecognitionStudentView(QWidget):
         self.timer.timeout.connect(self.update_frame)
         self.is_camera_active = False
 
-        # Nút mở và đóng camera
+        # Nút mở camera
         camera_buttons_layout = QHBoxLayout()
         self.open_camera_btn = QPushButton("Mở Camera")
         self.open_camera_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
         self.open_camera_btn.clicked.connect(self.toggle_camera)
 
+        # Nút đóng camera
         self.close_camera_btn = QPushButton("Đóng Camera")
         self.close_camera_btn.setStyleSheet("background-color: #F44336; color: white; padding: 10px;")
         self.close_camera_btn.clicked.connect(self.toggle_camera)
 
+        # Nút điểm danh lại nếu có có điểm sai
+        self.reset_recognition = QPushButton("Nhận diện lại")
+        self.reset_recognition.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
+        self.reset_recognition.clicked.connect(self.remove_inf)
+
+        # Nút Xem danh sách sinh viên đã điểm danh
+        self.viewList = QPushButton("Lưu danh sách")
+        self.viewList.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
+        self.reset_recognition.clicked.connect(self.saveDataToDB)
+
         camera_buttons_layout.addWidget(self.open_camera_btn)
         camera_buttons_layout.addWidget(self.close_camera_btn)
+        camera_buttons_layout.addWidget(self.reset_recognition)
+        camera_buttons_layout.addWidget(self.viewList)
+
         self.recognition_layout.addLayout(camera_buttons_layout)
 
         # Thêm màn hình nhận diện vào main layout
@@ -159,9 +204,8 @@ class RecognitionStudentView(QWidget):
         self.infor_content = QWidget(self)
         self.infor_playout = QVBoxLayout(self.infor_content)
 
-
         # Nhận diện học sinh (Phần bên dưới)
-        session_group = QGroupBox("Nhận diện học sinh")
+        session_group = QGroupBox("Nhận diện sinh viên")
         session_layout = QGridLayout()
         session_group.setLayout(session_layout)
         session_group.setStyleSheet("""
@@ -177,7 +221,6 @@ class RecognitionStudentView(QWidget):
         # Thêm groupbox thông tin buổi học vào layout
         self.infor_playout.addWidget(session_group)
 
-
         self.attendance_group = QGroupBox("Điểm danh thành công")
         self.attendance_group.setStyleSheet("""
             border: 1px solid gray;
@@ -190,7 +233,7 @@ class RecognitionStudentView(QWidget):
         self.attendance_layout = QGridLayout()
         self.attendance_group.setLayout(self.attendance_layout)
 
-        self.id_label = QLabel("ID Học sinh:")
+        self.id_label = QLabel("ID sinh viên:")
         self.id_label.setStyleSheet("border: none")
         self.id_input = QLineEdit()
         self.id_input.setStyleSheet("""
@@ -200,7 +243,7 @@ class RecognitionStudentView(QWidget):
                     margin-bottom: 10px;
                 """)
 
-        self.name_label = QLabel("Tên Học sinh:")
+        self.name_label = QLabel("Tên sinh viên:")
         self.name_label.setStyleSheet("border: none")
         self.name_input = QLineEdit()
         self.name_input.setStyleSheet("""
@@ -238,9 +281,102 @@ class RecognitionStudentView(QWidget):
 
         self.setLayout(self.grid_layout)
 
-    def face_extractor(self, img):
+    def loadClassData(self):
+        # Mảng để chứa dữ liệu
+        class_names = []
+        print(Global.GLOBAL_ACCOUNTID)
 
-        # classifier = load_model("D:\Python\Py_project\FaceRecognitionSystem\model.keras")
+        try:
+            # Kết nối đến cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+
+            # Truy vấn để lấy tên lớp học
+            query = """
+                    SELECT nameC
+                    FROM classes 
+                    JOIN teachers t ON classes.TId = t.TID
+                    WHERE t.TID = %s
+                    """
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,))  # Lọc theo giáo viên
+            results = cursor.fetchall()
+
+            # Kiểm tra nếu không có kết quả
+            if not results:
+                print("Không có lớp học nào trong hệ thống.")
+                return class_names  # Trả về mảng rỗng
+
+            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
+            class_names = [result[0] for result in results]  # result[0] là tên lớp học
+
+        except Exception as e:
+            print(f"Lỗi khi tải dữ liệu: {e}")
+
+        finally:
+            # Đóng kết nối và cursor
+            cursor.close()
+            db.close()
+
+        return class_names
+
+    def loadSessionData(self):
+        # Mảng để chứa dữ liệu
+        session_names = []
+        print(Global.GLOBAL_ACCOUNTID)
+
+        try:
+            # Kết nối đến cơ sở dữ liệu
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+
+            # Truy vấn để lấy tên lớp học
+            name_class = self.classname.currentText().strip()
+            print(name_class)
+            query = """
+                    SELECT COUNT(s.sessionId)
+                    FROM sessions s
+                    JOIN classes c ON s.CId = c.CId
+                    JOIN teachers t ON t.TID = c.TId
+                    WHERE t.TID = %s AND s.CId in (select CId from classes where nameC = %s)
+
+                    """
+            cursor.execute(query, (Global.GLOBAL_ACCOUNTID, name_class))  # Lọc theo giáo viên
+            results = cursor.fetchall()
+
+            # Kiểm tra nếu không có kết quả
+            if not results:
+                print("Không có lớp học nào trong hệ thống.")
+                return session_names  # Trả về mảng rỗng
+
+            numberOfSessions = results[0][0]
+            print(f"Số lượng phiên: {numberOfSessions}")
+            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
+            session_range = list(range(1, numberOfSessions + 1))
+            session_names = [str(i) for i in session_range]  # result[0] là tên lớp học
+            print(session_names)
+            return session_names
+
+        except Exception as e:
+            print(f"Lỗi khi tải dữ liệu: {e}")
+
+        finally:
+            # Đóng kết nối và cursor
+            cursor.close()
+            db.close()
+
+        return session_names
+
+    def face_extractor(self, img):
 
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = face_cascade.detectMultiScale(img, 1.3, 5)
@@ -254,7 +390,7 @@ class RecognitionStudentView(QWidget):
             return cropped_face
 
         return None
-    
+
     def toggle_camera(self):
         if not self.is_camera_active:
             # Bật camera
@@ -263,7 +399,7 @@ class RecognitionStudentView(QWidget):
                 self.camera_feed.setText("Không thể mở camera")
                 return
             self.is_camera_active = True
-            self.timer.start(10)  # Cập nhật khung hình mỗi 30ms
+            self.timer.start(10)  # Cập nhật khung hình mỗi 10ms
         else:
             # Tắt camera
             self.timer.stop()
@@ -271,7 +407,7 @@ class RecognitionStudentView(QWidget):
                 self.camera.release()
             self.camera_feed.clear()
             self.is_camera_active = False
-    
+
     def update_frame(self):
         ret, frame = self.camera.read()
         if ret:
@@ -280,13 +416,9 @@ class RecognitionStudentView(QWidget):
 
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
             faces = face_cascade.detectMultiScale(frame, 1.3, 5)
-            
+
             for (x, y, w, h) in faces:
-            #     # draw rectangle around face
-            #     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
-            #     cropped_face = frame[y:y + h, x:x + w]
-                # return cropped_face
-                # self.update_face_recognitioned(cropped_face)
+                #     # draw rectangle around face
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
                 height, width, channel = frame.shape
                 step = channel * width
@@ -300,13 +432,13 @@ class RecognitionStudentView(QWidget):
                 self.update_face_recognitioned(face, frame)
 
     def update_face_recognitioned(self, face_img, frame1):
-      
+
         image_recognition = face_img
         size = self.label_image.size()
         t = size.width()
         g = size.height()
-        
-        if image_recognition is not None: 
+
+        if image_recognition is not None:
             w, h = image_recognition.shape[:2]
             try:
                 # Resize the face image to fit model input
@@ -318,26 +450,39 @@ class RecognitionStudentView(QWidget):
                 pred = self.model.predict(img_array)
                 predicted_class = np.argmax(pred, axis=1)
                 name = self.label_map[predicted_class[0]]
-            
-                #set org
 
-                cv2.putText(frame1, str(self.mapIdtoName[int(name)-1]), (0, 15), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 1)
-                
-                if name in self.fronter:
-                    self.fronter.append(name)
+                self.recognition_name = name
 
+                # set org
+
+                cv2.putText(frame1, self.mapIdtoName[int(name) - 1], (0, 15), cv2.FONT_HERSHEY_COMPLEX, 0.6,
+                            (0, 255, 0), 1)
+
+                # if name in self.fronter:
+                #     self.fronter.append(name)
+
+                print(name, self.fronter)
                 frame = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
                 height, width, channel = frame.shape
                 step = channel * width
                 q_image = QImage(frame.data, 224, 224, step, QImage.Format.Format_RGB888)
                 if name not in self.fronter:
                     if self.count < 1:
+                        # for i in range(5):
+                        #     if self.fronter is None:
+                        #         self.fronter[i]= name
+                        #     # self.fronter.append(name)
+                        #         print("name", self.fronter)
+                        #         break
+                        # Hiển thị thông tin học sinh đã điểm danh lên màn hình
                         self.fronter.append(name)
-                        #Hiển thị thông tin học sinh đã điểm danh lên màn hình
                         self.id_input.setText(str(name))
-                        self.name_input.setText(self.mapIdtoName[int(name)-1])
+                        self.name_input.setText(self.mapIdtoName[int(name) - 1])
                         self.time_input.setText(QTime.currentTime().toString("hh:mm:ss"))
-                    
+                        self.data = [str(name), self.mapIdtoName[int(name) - 1],
+                                     QTime.currentTime().toString("hh:mm:ss")]
+                        self.saveData(self.data)
+
                         # Hiển thị khung hình lên QLabel
                         self.label_image.setPixmap(QPixmap.fromImage(q_image))
                         self.count = 2
@@ -346,73 +491,55 @@ class RecognitionStudentView(QWidget):
             except Exception as e:
                 print(f"Error during face processing: {e}")
 
+    def remove_inf(self):
+        # pass
+        name = self.recognition_name
 
-    # def update_frame(self):
-    #     ret, frame = self.camera.read()
-    #     if ret:
-    #         # Convert frame from BGR (OpenCV) to RGB (Qt)
-    #         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        self.id_input.clear()
+        self.name_input.clear()
+        self.time_input.clear()
+        self.label_image.setPixmap(QPixmap())
 
-    #         # Call face_extractor to get face region
-    #         face = self.face_extractor(frame_rgb)
-    #         if face is not None:
-    #             try:
-    #                 # Resize the face image to fit model input
-    #                 face_resized = cv2.resize(face, (224, 224))
-    #                 im = Image.fromarray(face_resized, 'RGB')
-    #                 img_array = np.array(im)
-    #                 img_array = np.expand_dims(img_array, axis=0) / 255.0
+        if name in self.fronter:
+            for i in self.fronter:
+                if i == name:
+                    self.fronter.remove(i)
+                    print(self.fronter)
+        self.count = 0
 
-    #                 pred = self.model.predict(img_array)
-    #                 predicted_class = np.argmax(pred, axis=1)
-    #                 name = self.label_map[predicted_class[0]]
+    def saveData(self, data_array):
+        # Tạo một dòng mới
+        current_row = self.table.rowCount()
+        self.table.insertRow(current_row)
 
-    #                 #set org
-    #                 cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-    #             except Exception as e:
-    #                 print(f"Error during face processing: {e}")
-    #         else:
-    #             cv2.putText(frame_rgb, "No face detected", (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
+        # Thêm dữ liệu vào dòng mới
+        for col, value in enumerate(data_array):
+            if col < self.table.columnCount():  # Đảm bảo không vượt quá số cột
+                item = QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.table.setItem(current_row, col, item)
 
-    #         height, width, channel = frame_rgb.shape
-    #         step = channel * width
-    #         q_image = QImage(frame_rgb.data, width, height, step, QImage.Format.Format_RGB888)
-    #         self.camera_feed.setPixmap(QPixmap.fromImage(q_image))
+    def saveDataToDB(self):
+        try:
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+            query = """
+                    update studentsinsessions
+                    set attendance = "present",
+                        attendancedTime = %s
+                    where sessionId in (
+                            select sessionId from sessions where sessionName = %s AND CId in (
+                            select CId from classes where nameC = %s)) AND SId = %s;
+                   """
 
-
-    def update_frame(self):
-        ret, frame = self.camera.read()
-        if ret:
-            # Convert frame from BGR (OpenCV) to RGB (Qt)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # Call face_extractor to get face region
-            face = self.face_extractor(frame_rgb)
-            if face is not None:
-                try:
-                    # Resize the face image to fit model input
-                    face_resized = cv2.resize(face, (224, 224))
-                    im = Image.fromarray(face_resized, 'RGB')
-                    img_array = np.array(im)
-                    img_array = np.expand_dims(img_array, axis=0) / 255.0
-
-                    pred = self.model.predict(img_array)
-                    predicted_class = np.argmax(pred, axis=1)
-                    name = self.label_map[predicted_class[0]]
-
-                    #set org
-                    cv2.putText(frame_rgb, name, (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-
-                except Exception as e:
-                    print(f"Error during face processing: {e}")
-            else:
-                cv2.putText(frame_rgb, "No face detected", (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 1)
-
-            height, width, channel = frame_rgb.shape
-            step = channel * width
-            q_image = QImage(frame_rgb.data, width, height, step, QImage.Format.Format_RGB888)
-            self.camera_feed.setPixmap(QPixmap.fromImage(q_image))
-
+            cursor.execute(query, )
+        except Exception as e:
+            print(f"Lỗi khi lưu: {e}")
 
     def closeEvent(self, event):
         # Giải phóng tài nguyên khi đóng cửa sổ

@@ -1,4 +1,3 @@
-
 from BaseTableWindow import BaseTableWindow
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QLabel, QPushButton, QTableWidget, QTableWidgetItem,

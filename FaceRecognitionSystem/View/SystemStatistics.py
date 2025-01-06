@@ -1,8 +1,7 @@
-
 import sys
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QTabWidget
+    QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QTabWidget, QStackedWidget
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -13,6 +12,7 @@ from NoAttendanceWindow import NoAttendanceWindow
 class SystemStatistics(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = QStackedWidget()
         self.stacked_widget = stacked_widget
         self.setWindowTitle("Thống kê hệ thống")
         self.setGeometry(100, 100, 1200, 700)
@@ -114,13 +114,17 @@ class SystemStatistics(QMainWindow):
         SELECT c.nameC, COUNT(ss.SId) AS present_students_count
         FROM classes c
         JOIN sessions s ON c.CId = s.CId
-        JOIN studentsInSessions ss ON s.sessionId = ss.sessionId
+        JOIN studentsinsessions ss ON s.sessionId = ss.sessionId
         WHERE ss.attendance = 'present'
         GROUP BY c.CId;
         """
+
         cursor.execute(query1)
         data1 = cursor.fetchall()
         hoc_sinh_co_diem_danh = {row[0]: row[1] for row in data1}
+
+
+        # Truy vấn số học sinh vắng cho mỗi lớp
 
         query2 = """
         SELECT c.nameC, COUNT(ss.SId) AS absent_students_count
@@ -131,15 +135,18 @@ class SystemStatistics(QMainWindow):
         GROUP BY c.CId;
 
         """
+
         cursor.execute(query2)
         data2 = cursor.fetchall()
         hoc_sinh_vang = {row[0]: row[1] for row in data2}
+
 
         query4 = """
         SELECT c.CId, c.nameC
         FROM classes c
         ORDER BY c.CId;
         """
+
         cursor.execute(query4)
         data4 = cursor.fetchall()
         class_names = {row[0]: row[1] for row in data4}
@@ -153,7 +160,11 @@ class SystemStatistics(QMainWindow):
         miss = [hoc_sinh_vang.get(c, 0) for c in hoc_sinh_vang.keys()]
 
         width = 0.35
-        indices = range(len(x))
+        indices = list(range(len(x)))
+        print(x)
+        print(f"indices: {indices}, length: {len(indices)}")
+        print(f"miss: {miss}, length: {len(miss)}")
+
 
         ax.bar([i - width / 2 for i in indices], sumst, width=width, color="#F29CA3", label="Số học sinh điểm danh")
         ax.bar([i + width / 2 for i in indices], miss, width=width, color="#64113F", label="Số học sinh vắng")
