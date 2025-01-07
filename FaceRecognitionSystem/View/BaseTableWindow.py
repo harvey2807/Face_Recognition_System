@@ -110,58 +110,69 @@ class BaseTableWindow(QWidget):
 
         if file_path:  # Nếu người dùng chọn vị trí lưu tệp
             try:
-                # Tạo một workbook mới và một sheet
                 workbook = Workbook()
                 sheet = workbook.active
                 sheet.title = "Dữ liệu học sinh"
+                sheet.append(["STT", "Tên lớp", "ID SV", "Tên Học sinh", "Số buổi", "Ngày"])
 
-                # Ghi tiêu đề cột vào tệp Excel
-                sheet.append(["STT","Tên lớp", "ID SV", "Tên Học sinh", "Số buổi", "Ngày"])
-
-                # Tạo dictionary để nhóm dữ liệu
                 data_grouped = {}
+                print(f"Lớp đã tìm kiếm: {self.searched_class_name}")
 
-                # Lấy dữ liệu từ bảng và nhóm theo ID, Tên, và Ngày
                 for row in range(self.table.rowCount()):
+                    if self.table.isRowHidden(row):
+                        continue
+
                     class_name_item = self.table.item(row, 0)
                     id_item = self.table.item(row, 1)
                     name_item = self.table.item(row, 2)
                     session_item = self.table.item(row, 3)
                     date_item = self.table.item(row, 4)
 
-                    if class_name_item and id_item and name_item and session_item and date_item:
-                        class_name = class_name_item.text()
-                        student_id = id_item.text()
-                        student_name = name_item.text()
-                        session = session_item.text()
-                        date = date_item.text()
+                    # Bỏ qua nếu bất kỳ giá trị nào bị thiếu
+                    if not class_name_item or not id_item or not name_item or not session_item or not date_item:
+                        print(f"Bỏ qua hàng do thiếu dữ liệu ở hàng {row + 1}")
+                        continue
 
-                        # Kiểm tra nếu có lớp tìm kiếm thì chỉ xuất dữ liệu của lớp đó
-                        if self.searched_class_name and self.searched_class_name != class_name:
+                    class_name = class_name_item.text().strip()
+                    student_id = id_item.text().strip()
+                    student_name = name_item.text().strip()
+                    session = session_item.text().strip()
+                    date = date_item.text().strip()
+
+                    # Kiểm tra lớp (không phân biệt chữ hoa/chữ thường)
+                    if hasattr(self, 'searched_class_name') and self.searched_class_name:
+                        if self.searched_class_name.strip().lower() != class_name.lower():
                             continue  # Bỏ qua lớp không phải lớp đang tìm kiếm
 
-                        key = (student_id, student_name, class_name)  # Thêm "Tên lớp" vào khóa nhóm
-                        if key not in data_grouped:
-                            data_grouped[key] = {"count": 0, "dates": []}
-                        data_grouped[key]["count"] += 1
-                        data_grouped[key]["dates"].append(date)
+                    # Nhóm dữ liệu theo ID SV, Tên học sinh và Tên lớp
+                    key = (class_name, student_id, student_name)
+                    if key not in data_grouped:
+                        data_grouped[key] = {"count": 0, "dates": []}
+                    data_grouped[key]["count"] += 1
+                    data_grouped[key]["dates"].append(date)
 
-                # Ghi dữ liệu đã nhóm vào tệp Excel (thêm STT)
+                    # Debug: In dữ liệu được thêm
+                    print(f"Key thêm vào: {key}, Số buổi: {data_grouped[key]['count']}, Ngày: {data_grouped[key]['dates']}")
+
+                if not data_grouped:
+                    print(f"Không có dữ liệu phù hợp với lớp: {self.searched_class_name}")
+                    return
+
                 stt = 1
-                for (student_id, student_name, class_name), data in data_grouped.items():
+                for (class_name, student_id, student_name), data in data_grouped.items():
                     session_count = data["count"]
                     dates = ", ".join(data["dates"])
+                    print(f"STT: {stt}, Lớp: {class_name}, ID: {student_id}, Tên: {student_name}, Số buổi: {session_count}, Ngày: {dates}")
                     sheet.append([stt, class_name, student_id, student_name, session_count, dates])
                     stt += 1
 
-                # Lưu workbook vào tệp Excel
                 workbook.save(file_path)
-
                 print(f"Dữ liệu đã được xuất thành công tại: {file_path}")
             except Exception as e:
                 print(f"Lỗi khi xuất Excel: {e}")
         else:
             print("Người dùng đã hủy thao tác xuất Excel.")
+
 
     def search_by_id_or_class_name(self):
         search_text = self.search_input.text().strip()  # Lấy nội dung tìm kiếm
@@ -190,3 +201,5 @@ class BaseTableWindow(QWidget):
         self.searched_class_name = ""  # Reset khi xem lại tất cả
         for row in range(self.table.rowCount()):
             self.table.setRowHidden(row, False)
+
+

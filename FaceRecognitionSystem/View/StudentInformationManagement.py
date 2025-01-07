@@ -8,6 +8,8 @@ from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QPixmap
 import MySQLdb as mdb
 import sys
+import os
+import shutil
 
 
 class StudentInformationManagement(QWidget):
@@ -78,7 +80,7 @@ class StudentInformationManagement(QWidget):
 
         # Nhãn để hiển thị hình ảnh hoặc nút tải ảnh
         self.photo_label = QLabel("Click để tải ảnh")
-        self.photo_label.setFixedSize(224, 224)
+        self.photo_label.setFixedSize(200, 200)
         self.photo_label.setStyleSheet("border: 1px solid black; background-color: #F0F0F0; border-radius: 5px;")
         self.photo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.photo_label.setCursor(Qt.CursorShape.PointingHandCursor)  # Thêm con trỏ tay khi di chuột lên
@@ -207,22 +209,49 @@ class StudentInformationManagement(QWidget):
         self.search_button.clicked.connect(self.search_student)
         self.view_all_button.clicked.connect(self.view_all_students)
 
-    # Phương thức tải ảnh
+    # tải ảnh lên
     def upload_photo(self, event):
-        # Mở hộp thoại để chọn file ảnh
-        file_dialog = QFileDialog()
-        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
-        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg *.bmp *.gif)")
+        try:
+            # Mở hộp thoại để chọn file ảnh
+            file_dialog = QFileDialog()
+            file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+            file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg *.bmp *.gif)")
 
-        # Nếu người dùng chọn ảnh, lấy đường dẫn và hiển thị ảnh
-        if file_dialog.exec():
-            selected_files = file_dialog.selectedFiles()
-            if selected_files:
-                photo_path = selected_files[0]
-                self.photo_label.setPixmap(
-                    QPixmap(photo_path).scaled(self.photo_label.size(), Qt.AspectRatioMode.KeepAspectRatio))
-                self.photo_label.setText("")  # Xóa chữ khi đã có ảnh
-                self.photo_path = photo_path  # Lưu đường dẫn ảnh
+            # Nếu người dùng chọn ảnh, lấy đường dẫn và hiển thị ảnh
+            if file_dialog.exec():
+                selected_files = file_dialog.selectedFiles()
+                if selected_files:
+                    photo_path = selected_files[0]
+
+                    # Lấy tên file ảnh và tách tên trước dấu -
+                    file_name = os.path.basename(photo_path)
+                    folder_name = file_name.split(' -')[0]  # Lấy phần trước dấu " -"
+
+                    # Thư mục lưu ảnh sử dụng tên thư mục tương đối
+                    image_folder = os.path.join(r'\Data\Train', folder_name)
+                    if not os.path.exists(image_folder):
+                        os.makedirs(image_folder)  # Tạo thư mục nếu chưa có
+
+                    # Tạo đường dẫn cho ảnh mới
+                    relative_path = os.path.join(image_folder, file_name)
+
+                    # Kiểm tra xem ảnh đã tồn tại trong thư mục đích chưa
+                    if not os.path.exists(relative_path):
+                        shutil.copy(photo_path, relative_path)  # Sao chép ảnh vào thư mục
+                        print(f"Đã sao chép ảnh đến: {relative_path}")
+                    else:
+                        print(f"Ảnh đã tồn tại tại {relative_path}")
+
+                    # Cập nhật ảnh lên UI
+                    self.photo_label.setPixmap(
+                        QPixmap(relative_path).scaled(self.photo_label.size(), Qt.AspectRatioMode.KeepAspectRatio))
+                    self.photo_label.setText("")  # Xóa chữ khi đã có ảnh
+                    self.photo_path = relative_path  # Lưu đường dẫn ảnh tương đối
+
+                    # Không cần trả về giá trị
+                    # Chỉ cần cập nhật UI và lưu đường dẫn
+        except Exception as e:
+            print(f"Đã xảy ra lỗi trong quá trình tải ảnh: {e}")
 
     def reset_fields(self):
         self.id_input.clear()
@@ -256,8 +285,11 @@ class StudentInformationManagement(QWidget):
         phone = self.phone_input.text()
         address = self.address_input.text()
 
-        # Câu lệnh SQL để chèn dữ liệu
+        # Lấy đường dẫn thư mục chứa ảnh (phần đường dẫn thư mục)
         photo_path = getattr(self, "photo_path", None)  # Lấy đường dẫn ảnh nếu có
+        if photo_path:
+            photo_path = os.path.dirname(photo_path)  # Lấy thư mục chứa ảnh
+
         query = """
         INSERT INTO students (nameSt, dob, gender, CCCD, email, address, phone, class, photo_path)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -268,7 +300,7 @@ class StudentInformationManagement(QWidget):
             cursor.execute(query, values)
             db.commit()
             print("Lưu học sinh thành công!")
-            # đặt lại khung ảnh như ban đầu, xóa hình
+            # Đặt lại khung ảnh như ban đầu, xóa hình
             self.photo_label.setPixmap(QPixmap())  # xóa hình
             self.photo_label.setText("Click để tải ảnh")  # hiện chữ
             self.photo_path = None  # xóa đường dẫn hình
@@ -428,3 +460,10 @@ class StudentInformationManagement(QWidget):
         finally:
             cursor.close()
             db.close()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    main_window = StudentInformationManagement(" ")
+    main_window.show()
+    sys.exit(app.exec())
