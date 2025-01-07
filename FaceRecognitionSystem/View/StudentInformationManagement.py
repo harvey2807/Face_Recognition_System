@@ -6,6 +6,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
+from tensorflow.keras.models import Model
+import numpy as np
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from scipy.spatial.distance import cosine
+import os
 
 class StudentInformationManagement(QWidget):
     def __init__(self, stacked_widget):
@@ -361,6 +366,20 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
+        def extract_embeddings_from_foder(model, folder_path):
+            embeddings =[]
+            list_folder = []
+
+            for file_name in os.listdir(folder_path):
+                file_path = os.path.join(folder_path, file_name)
+                if file_name.lower().endswith(('jpg', 'png', 'jpeg')):
+                    try:
+                        embedding = extract_embedding(model, file_path)
+                        embeddings.append(embedding)
+                        list_folder.append(file_path)
+                    except Exception as e:
+                        print(f'Error when process{file_path}:{e}')
+            return embedding, list_folder
     # xem tất cả
 
     def view_all_students(self):
