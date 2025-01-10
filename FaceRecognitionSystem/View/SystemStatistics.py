@@ -1,5 +1,6 @@
 import sys
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QTabWidget, QStackedWidget
 )
@@ -19,6 +20,9 @@ class SystemStatistics(QMainWindow):
         self.setup_ui()  # Gọi hàm thiết lập giao diện
         self.setStyleSheet("background-color: white; color:black;")  # Đặt màu nền và màu chữ
 
+        self.chart_canvas= QWidget()
+        
+
     def setup_ui(self):
         # Tạo layout chính
         main_layout = QVBoxLayout()
@@ -31,6 +35,7 @@ class SystemStatistics(QMainWindow):
         tab_widget.addTab(self.create_no_attendance_tab(), "Học sinh vắng")
         tab_widget.addTab(self.create_attendance_tab(), "Học sinh đã điểm danh")
 
+
         # Thêm QTabWidget vào layout chính
         main_layout.addWidget(tab_widget)
 
@@ -39,14 +44,33 @@ class SystemStatistics(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)  # Đặt widget trung tâm cho cửa sổ chính
 
+   
+        
     def create_statistics_tab(self):
         """Tạo tab thống kê chứa biểu đồ"""
         statistics_tab = QWidget()
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
+        icon_path = "D:\\Python\\Py_project\\FaceRecognitionSystem\\Image\\reload.jpg"
+      
+# Kiểm tra đường dẫn và khởi tạo QIcon
+        try:
+            # Tạo nút với icon
+            self.reload_button = QPushButton()
+            self.reload_button.setFixedSize(50,50)
+            icon = QIcon(icon_path)
+            self.reload_button.setIcon(icon)  # Đặt icon cho nút
+            self.reload_button.setIconSize(QSize(50,50))  # Điều chỉnh kích thước icon
+           
+            # Thêm nút vào layout
+            # layout.addWidget(self.reload_button)
+        except Exception as e:
+            print(f"Lỗi: {e}")
+        self.reload_button.clicked.connect(self.reload_chart)
 
         # Thêm biểu đồ với viền
         chart_widget = self.create_chart_with_border()
         layout.addWidget(chart_widget)
+        layout.addWidget(self.reload_button)
 
         statistics_tab.setLayout(layout)
         return statistics_tab
@@ -89,13 +113,14 @@ class SystemStatistics(QMainWindow):
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Hiệu ứng bóng */
             }
         """)
-
+        
         # Thêm biểu đồ vào container
-        chart_layout = QVBoxLayout()
-        chart = self.create_area_chart()  # Gọi hàm tạo biểu đồ
-        chart_layout.addWidget(chart)
-        chart_container.setLayout(chart_layout)
+        self.chart_layout = QVBoxLayout()
+        self.chart_canvas = self.create_area_chart()  # Gọi hàm tạo biểu đồ
+        self.chart_layout.addWidget(self.chart_canvas)
 
+        chart_container.setLayout(self.chart_layout)
+        
         return chart_container  # Trả về container chứa biểu đồ
 
     def create_area_chart(self):
@@ -197,3 +222,21 @@ class SystemStatistics(QMainWindow):
 
         canvas = FigureCanvas(figure)
         return canvas
+    
+    def reload_chart(self):
+        # Xóa tất cả widget trong layout
+        while self.chart_layout.count() > 0:
+            widget = self.chart_layout.takeAt(0).widget()
+            if widget is not None:
+                widget.deleteLater()  # Xóa widget khỏi giao diện
+
+        # Tạo biểu đồ mới và thêm lại vào layout
+        self.chart_canvas = self.create_area_chart()
+        self.chart_layout.addWidget(self.chart_canvas)
+
+        
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     main_window = SystemStatistics("My Window")
+#     main_window.show()
+#     sys.exit(app.exec()) 

@@ -1,9 +1,9 @@
 import sys
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer,QDate
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QComboBox, QPushButton, QLineEdit, \
-    QGridLayout, QTextEdit, QStackedWidget
+    QGridLayout, QTextEdit, QStackedWidget, QTableWidget, QHeaderView, QTabWidget,QTableWidgetItem,QApplication
 import cv2
 import os
 from tensorflow.keras.models import load_model
@@ -35,12 +35,12 @@ class RecognitionStudentView(QWidget):
         cursor = db.cursor()
 
 
-        self.model = load_model("D:\python\FaceRecognitionSystem\model.keras")
+        self.model = load_model("D:\Python\model.keras")
 
-
+        self.start_recognition = False
         self.count = 0
         self.recognition_name =0
-        self.fronter = [None]*5
+        self.fronter = []
         print(self.fronter)
 
         cursor.execute("select SId, nameSt from students")
@@ -101,44 +101,83 @@ class RecognitionStudentView(QWidget):
         self.recognition_layout = QVBoxLayout()
         self.recognition_group.setLayout(self.recognition_layout)
 
+
         # Combobox để chọn lớp và loại điểm danh
         choose_layout = QHBoxLayout()
-        self.course_label = QLabel("Chọn Lớp:")
+        self.course_label = QLabel("Lớp:")
+        self.course_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.course_label.setStyleSheet("border: none")
-        self.classname = QComboBox()
-        class_names = self.loadClassData()
-        self.classname.addItems(class_names)
-        self.classname.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.classname = QLabel("")
+        # class_names = self.loadClassData()
+        # self.classname.addItems(class_names)
+        self.classname.setStyleSheet("padding:1px 2px; border: 1px solid gray;")
+        self.classname.setFixedHeight(25)
 
-        self.class_label = QLabel("Chọn Buổi:")
+        self.class_label = QLabel("Buổi:")
+        self.class_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.class_label.setStyleSheet("border: none")
-        self.sessionname = QComboBox()
-        session_name = self.loadSessionData()
-        self.sessionname.addItems(session_name)
-        self.sessionname.setStyleSheet("padding: 5px; border: 1px solid gray;")
+        self.sessionname = QLabel("")
+        # session_name = self.loadSessionData("2024-12-04","11:00:00")
+        # self.sessionname.addItems(session_name)
+        self.sessionname.setStyleSheet("padding:1px 2px; border: 1px solid gray;")
+        self.sessionname.setFixedHeight(25)
 
-        self.attendance_label = QLabel("Loại Điểm Danh:")
-        self.attendance_label.setStyleSheet("border: none")
-        self.attendance_combo = QComboBox()
-        self.attendance_combo.addItems(["Vào", "Ra"])
-        self.attendance_combo.setStyleSheet("padding: 5px; border: 1px solid gray;")
+  
+        self.timerzoro = QTimer(self)
+        self.timerzoro.timeout.connect(
+             lambda: self.loadSessionData(
+                QDate.currentDate().toString("yyyy-MM-dd"),
+                QTime.currentTime().toString("hh:mm:ss")
+            )
+        )
+        self.timerzoro.start(1000)
+
 
         # Thêm vào layout chọn thông tin
         choose_layout.addWidget(self.course_label)
         choose_layout.addWidget(self.classname)
         choose_layout.addWidget(self.class_label)
         choose_layout.addWidget(self.sessionname)
-        choose_layout.addWidget(self.attendance_label)
-        choose_layout.addWidget(self.attendance_combo)
         self.recognition_layout.addLayout(choose_layout)
+
+        self.stack_widget = QWidget(self)
+        self.stack_widget.setStyleSheet("background-color: white;")
+        # self.stack_widget.setGeometry(0,50,700,450)
+
+        self.stack_layout = QVBoxLayout(self.stack_widget)
+        self.stack_widget.setLayout(self.stack_layout)
+
+        self.tab = QTabWidget(self)
+        self.tab.setStyleSheet("""
+            QTabBar::tab:selected { 
+                background: white; 
+                border-bottom: 1px solid #0078D7;
+                padding: 5px;
+            }
+        """)
+
+    #Chứa danh sách các sinh viên đã điểm danh
+        self.table = QTableWidget(0, 3)  # Bảng chứa kết quả tìm kiếm
+        self.table.setHorizontalHeaderLabels(["ID","Tên sinh viên", "Thời gian"])  # Đặt tên các cột
+        self.table.setFixedSize(700,360)
+        # Điều chỉnh kích thước các cột trong bảng
+        header = self.table.horizontalHeader()
+        for i in range(self.table.columnCount()):
+            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Stretch)
 
         # Camera feed
         self.camera_feed = QLabel()
         self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # self.camera_feed.setPixmap(QPixmap("../Image/img.png").scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio))
-        # self.camera_feed.setStyleSheet("border: 1px solid blue; text-align: center;")
+        self.camera_feed.setStyleSheet("border: 1px solid black; text-align: center; border-radius: 3px;")
         self.camera_feed.setFixedSize(700, 360)
-        self.recognition_layout.addWidget(self.camera_feed, alignment=Qt.AlignmentFlag.AlignCenter)
+        # self.recognition_layout.addWidget(self.camera_feed, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.tab.addTab(self.camera_feed,'Nhận diện')
+        self.tab.addTab(self.table,'Thông tin điểm danh')
+
+        self.recognition_layout.addWidget(self.tab, alignment=Qt.AlignmentFlag.AlignCenter)
+
 
         # Khởi tạo camera và timer
         self.camera = None
@@ -146,24 +185,31 @@ class RecognitionStudentView(QWidget):
         self.timer.timeout.connect(self.update_frame)
         self.is_camera_active = False
 
-        # Nút mở và đóng camera
+        # Nút mở camera
         camera_buttons_layout = QHBoxLayout()
         self.open_camera_btn = QPushButton("Mở Camera")
         self.open_camera_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
         self.open_camera_btn.clicked.connect(self.toggle_camera)
 
+        #Nút đóng camera
         self.close_camera_btn = QPushButton("Đóng Camera")
         self.close_camera_btn.setStyleSheet("background-color: #F44336; color: white; padding: 10px;")
         self.close_camera_btn.clicked.connect(self.toggle_camera)
 
-        # camera_buttons_layout = QHBoxLayout()
+        # Nút điểm danh lại nếu có có điểm sai
         self.reset_recognition = QPushButton("Nhận diện lại")
         self.reset_recognition.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
         self.reset_recognition.clicked.connect(self.remove_inf)
 
+        # Nút Xem danh sách sinh viên đã điểm danh
+        self.viewList = QPushButton("Lưu danh sách")
+        self.viewList.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px;")
+        self.viewList.clicked.connect(self.saveDataToDB)
+
         camera_buttons_layout.addWidget(self.open_camera_btn)
         camera_buttons_layout.addWidget(self.close_camera_btn)
         camera_buttons_layout.addWidget(self.reset_recognition)
+        camera_buttons_layout.addWidget(self.viewList)
         
         self.recognition_layout.addLayout(camera_buttons_layout)
 
@@ -176,7 +222,7 @@ class RecognitionStudentView(QWidget):
 
 
         # Nhận diện học sinh (Phần bên dưới)
-        session_group = QGroupBox("Nhận diện học sinh")
+        session_group = QGroupBox("Nhận diện sinh viên")
         session_layout = QGridLayout()
         session_group.setLayout(session_layout)
         session_group.setStyleSheet("""
@@ -205,9 +251,10 @@ class RecognitionStudentView(QWidget):
         self.attendance_layout = QGridLayout()
         self.attendance_group.setLayout(self.attendance_layout)
 
-        self.id_label = QLabel("ID Học sinh:")
+        self.id_label = QLabel("ID sinh viên:")
         self.id_label.setStyleSheet("border: none")
         self.id_input = QLineEdit()
+        self.id_input.setReadOnly(True)
         self.id_input.setStyleSheet("""
                     border: 1px solid #CCCCCC;
                     border-radius: 4px;
@@ -215,9 +262,10 @@ class RecognitionStudentView(QWidget):
                     margin-bottom: 10px;
                 """)
 
-        self.name_label = QLabel("Tên Học sinh:")
+        self.name_label = QLabel("Tên sinh viên:")
         self.name_label.setStyleSheet("border: none")
         self.name_input = QLineEdit()
+        self.name_input.setReadOnly(True)
         self.name_input.setStyleSheet("""
                             border: 1px solid #CCCCCC;
                             border-radius: 4px;
@@ -228,6 +276,7 @@ class RecognitionStudentView(QWidget):
         self.time_label = QLabel("Thời gian:")
         self.time_label.setStyleSheet("border: none")
         self.time_input = QLineEdit()
+        self.time_input.setReadOnly(True)
         self.time_input.setStyleSheet("""
                             border: 1px solid #CCCCCC;
                             border-radius: 4px;
@@ -254,53 +303,10 @@ class RecognitionStudentView(QWidget):
         self.setLayout(self.grid_layout)
 
 
-    def loadClassData(self):
-        # Mảng để chứa dữ liệu
-        class_names = []
-        print(Global.GLOBAL_ACCOUNTID)
-
-        try:
-            # Kết nối đến cơ sở dữ liệu
-            db = mdb.connect(
-                host='localhost',
-                user='root',
-                passwd='',
-                db="facerecognitionsystem"
-            )
-            cursor = db.cursor()
-
-            # Truy vấn để lấy tên lớp học
-            query = """
-                    SELECT nameC
-                    FROM classes 
-                    JOIN teachers t ON classes.TId = t.TID
-                    WHERE t.TID = %s
-                    """
-            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,))  # Lọc theo giáo viên
-            results = cursor.fetchall()
-
-            # Kiểm tra nếu không có kết quả
-            if not results:
-                print("Không có lớp học nào trong hệ thống.")
-                return class_names  # Trả về mảng rỗng
-
-            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
-            class_names = [result[0] for result in results]  # result[0] là tên lớp học
-
-        except Exception as e:
-            print(f"Lỗi khi tải dữ liệu: {e}")
-
-        finally:
-            # Đóng kết nối và cursor
-            cursor.close()
-            db.close()
-
-        return class_names
-
-    def loadSessionData(self):
+    def loadSessionData(self,date,time):
         # Mảng để chứa dữ liệu
         session_names = []
-        print(Global.GLOBAL_ACCOUNTID)
+        print(Global.GLOBAL_ACCOUNTID, date, time)
 
         try:
             # Kết nối đến cơ sở dữ liệu
@@ -314,32 +320,28 @@ class RecognitionStudentView(QWidget):
 
             
             # Truy vấn để lấy tên lớp học
-            name_class = self.classname.currentText().strip()
-            print(name_class)
             query = """
-                    SELECT COUNT(s.sessionId)
-                    FROM sessions s
-                    JOIN classes c ON s.CId = c.CId
-                    JOIN teachers t ON t.TID = c.TId
-                    WHERE t.TID = %s AND s.CId in (select CId from classes where nameC = %s)
-
+                   select c.nameC, s.sessionName
+                    from sessions s join classes c 
+                        on s.CId = c.CId
+                    where c.TId = %s AND s.sessionDate = %s AND (%s between s.startTime and s.endTime)
                     """
-            cursor.execute(query, (Global.GLOBAL_ACCOUNTID,name_class))  # Lọc theo giáo viên
+            input = (Global.GLOBAL_ACCOUNTID,date,time)
+            cursor.execute(query, input)  # Lọc theo giáo viên
             results = cursor.fetchall()
-
+            
             # Kiểm tra nếu không có kết quả
             if not results:
                 print("Không có lớp học nào trong hệ thống.")
-                return session_names  # Trả về mảng rỗng
-
-
-            numberOfSessions = results[0][0]
-            print(f"Số lượng phiên: {numberOfSessions}")
-            # Lấy dữ liệu từ kết quả truy vấn và lưu vào mảng class_names
-            session_range = list(range(1,numberOfSessions+1)) 
-            session_names = [str(i) for i in session_range]  # result[0] là tên lớp học
-            print(session_names)
-            return session_names
+                session_names = ["",""]
+                self.start_recognition = False
+            else :   
+                for data in results[0]:
+                    session_names.append(data)
+                self.start_recognition = True
+            
+            self.classname.setText(session_names[0])
+            self.sessionname.setText(session_names[1])
 
         except Exception as e:
             print(f"Lỗi khi tải dữ liệu: {e}")
@@ -349,8 +351,7 @@ class RecognitionStudentView(QWidget):
             cursor.close()
             db.close()
 
-        return session_names
-
+    
 
     def face_extractor(self, img):
 
@@ -404,15 +405,11 @@ class RecognitionStudentView(QWidget):
 
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 face = self.face_extractor(gray)
+                if self.start_recognition:
+                    self.update_face_recognitioned(face, frame)
 
-                self.update_face_recognitioned(face, frame)
-
-
-  
-          
-
+    
     def update_face_recognitioned(self, face_img, frame1):
-      
         image_recognition = face_img
         size = self.label_image.size()
         t = size.width()
@@ -437,26 +434,22 @@ class RecognitionStudentView(QWidget):
 
                 cv2.putText(frame1, self.mapIdtoName[int(name)-1], (0, 15), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 1)
                 
-                if name in self.fronter:
-                    self.fronter.append(name)
-
+                print(name,self.fronter)
                 frame = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
                 height, width, channel = frame.shape
                 step = channel * width
                 q_image = QImage(frame.data, 224, 224, step, QImage.Format.Format_RGB888)
                 if name not in self.fronter:
                     if self.count < 1:
-                        for i in range(5):
-                            if self.fronter is None:
-                                self.fronter[i]= name
-                            # self.fronter.append(name)
-                                print("name", self.fronter)
-                                break
                         #Hiển thị thông tin học sinh đã điểm danh lên màn hình
-                        self.id_input.setText(str(name))
+                        self.fronter.append(name)
+                        self.id_input.setText(str(name-1))
                         self.name_input.setText(self.mapIdtoName[int(name)-1])
                         self.time_input.setText(QTime.currentTime().toString("hh:mm:ss"))
-                    
+                        self.data = [str(name-1), self.mapIdtoName[int(name)-1], QTime.currentTime().toString("hh:mm:ss")]
+                        self.saveData(self.data)
+
+                        print("Thông tin học sinh", self.fronter)
                         # Hiển thị khung hình lên QLabel
                         self.label_image.setPixmap(QPixmap.fromImage(q_image))
                         self.count = 2
@@ -465,8 +458,13 @@ class RecognitionStudentView(QWidget):
             except Exception as e:
                 print(f"Error during face processing: {e}")
 
-    def remove_inf(self):
+    
 
+    def remove_inf(self):
+         # xóa trong bảng
+        self.delete_last_row()
+
+        # pass
         name = self.recognition_name  
     
         self.id_input.clear()
@@ -475,18 +473,96 @@ class RecognitionStudentView(QWidget):
         self.label_image.setPixmap(QPixmap())
 
         if name in self.fronter:
-            for i in range(5):
-                if self.fronter != None:
-                    if self.fronter[i] == name:
-                        self.fronter.remove(name)
-                        print(self.fronter)
+            for i in self.fronter:
+                if i == name:
+                    self.fronter.remove(i)
+                    print(self.fronter)
         self.count = 0
-        print("Thông tin đã được xóa và nhận diện lại.")
-        print("have not recognition_name")
+       
 
+    
+    def saveData(self,data_array):
+        #Tạo một dòng mới
+        current_row = self.table.rowCount() 
+        self.table.insertRow(current_row)
+
+        #Thêm dữ liệu vào dòng mới
+        for col, value in enumerate(data_array):
+            if col < self.table.columnCount():  # Đảm bảo không vượt quá số cột
+                item =QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.table.setItem(current_row, col,item)
+    
+    def saveDataToDB(self):
+        rows = self.table.rowCount()
+        cols = self.table.columnCount()
+        print("running...")
+        data = []
+        for row in range(rows):
+            row_data = []
+            for col in range(cols):
+                item = self.table.item(row, col)
+                row_data.append(item.text() if item else "")
+            data.append(row_data)
+        
+
+        try:
+            db = mdb.connect(
+                host='localhost',
+                user='root',
+                passwd='',
+                db="facerecognitionsystem"
+            )
+            cursor = db.cursor()
+            query = """
+                    update studentsinsessions
+                    set attendance = "present",
+                        attendancedTime = %s
+                    where sessionId in (
+                            select sessionId from sessions where sessionName = %s AND CId in (
+                            select CId from classes where nameC = %s)) AND SId = %s;
+                   """
+            # attendanceTime = self.time_input.text()
+            className = self.classname.text()
+            sessionName = self.sessionname.text()
+
+              # Kiểm tra xem data có phải là danh sách không
+            if isinstance(data, list):
+                for item in data:
+                    # Giả sử item là tuple (có ít nhất 3 phần tử)
+                    if len(item) >= 3:
+                        dataneedsave = (item[2], sessionName, className,  int(item[0]))  # item[0] và item[2] phải là các giá trị hợp lệ
+                        print(cursor.execute(query, dataneedsave))
+                        db.commit()
+                        print(f"Saved: {item[1]}")
+                        
+                    else:
+                        print("Dữ liệu không hợp lệ trong item:", item)
+            else:
+                print("Data phải là một danh sách")
+
+        except Exception as e:
+            print(f"Lỗi khi lưu: {e}")
+    #Xóa toàn bộ nội dung của bảng
+        self.fronter.clear()
+        self.start_recognition = True
+        self.table.setRowCount(0)
+
+    def delete_last_row(self):
+        # Kiểm tra xem bảng có dòng nào không
+        row_count = self.table.rowCount()
+        print("Xóa rồi")
+        if row_count > 0:
+            self.table.removeRow(row_count - 1)  # Xóa dòng cuối cùng
 
     def closeEvent(self, event):
         # Giải phóng tài nguyên khi đóng cửa sổ
         if self.camera:
             self.camera.release()
         event.accept()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    main_window = RecognitionStudentView("My Recognition Window")
+    main_window.show()
+    sys.exit(app.exec())       

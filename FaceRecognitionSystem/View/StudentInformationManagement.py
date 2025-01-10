@@ -1,11 +1,13 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
     QComboBox, QTableWidget, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QStackedWidget
+    QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QStackedWidget,QFileDialog
 
 )
 from PyQt6.QtCore import Qt, QDate
+from PyQt6.QtGui import QPixmap
 import MySQLdb as mdb
+import sys
 
 class StudentInformationManagement(QWidget):
     def __init__(self, stacked_widget):
@@ -15,7 +17,7 @@ class StudentInformationManagement(QWidget):
         # Thiết lập tiêu đề và kích thước cửa sổ
         self.setWindowTitle("Quản lý thông tin Học sinh")
         self.setGeometry(100, 100, 1200, 700)
-
+     
         # Định nghĩa CSS để tạo giao diện
         self.setStyleSheet("""
             QWidget {
@@ -73,13 +75,23 @@ class StudentInformationManagement(QWidget):
         student_group = QGroupBox("Thông tin Học sinh")  # Nhóm chứa thông tin học sinh
         student_layout = QGridLayout()  # Layout dạng lưới
 
+        # Nhãn để hiển thị hình ảnh hoặc nút tải ảnh
+        self.photo_label = QLabel("Click để tải ảnh")
+        self.photo_label.setFixedSize(200, 200)
+        self.photo_label.setStyleSheet("border: 1px solid black; background-color: #F0F0F0; border-radius: 5px;")
+        self.photo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.photo_label.setCursor(Qt.CursorShape.PointingHandCursor)  # Thêm con trỏ tay khi di chuột lên
+
+        # Kết nối sự kiện nhấp chuột của QLabel để tải ảnh
+        self.photo_label.mousePressEvent = self.upload_photo  # Gắn sự kiện nhấp chuột vào QLabel
+
         # Các ô nhập liệu thông tin
         self.id_input = QLineEdit()
         self.name_input = QLineEdit()
         self.class_input = QLineEdit()
         self.cccd_input = QLineEdit()
         self.gender_combo = QComboBox()
-        self.gender_combo.addItems(["male", "female", "other"])  # Thêm tùy chọn "Nam" và "Nữ
+        self.gender_combo.addItems(["nam", "nữ"])  # Thêm tùy chọn "Nam" và "Nữ
         self.dob_input = QDateTimeEdit(self, calendarPopup=True)
         self.dob_input.setDate(QDate.currentDate())  # Ngày mặc định
         self.dob_input.setDisplayFormat("dd/MM/yyyy")  # Định dạng hiển thị
@@ -128,6 +140,9 @@ class StudentInformationManagement(QWidget):
         student_layout.addWidget(self.phone_input, 4, 3)
         student_layout.addWidget(QLabel("Địa chỉ:"), 5, 0)
         student_layout.addWidget(self.address_input, 5, 1)
+
+               # Thêm nhãn và nút vào layout
+        student_layout.addWidget(self.photo_label, 0, 0, 1,2)  # Tạo khoảng trống cho ảnh
 
         # Các nút chức năng (Lưu, Sửa, Xóa)
         button_layout = QHBoxLayout()
@@ -191,6 +206,21 @@ class StudentInformationManagement(QWidget):
         self.search_button.clicked.connect(self.search_student)
         self.view_all_button.clicked.connect(self.view_all_students)
 
+    # Phương thức tải ảnh
+    def upload_photo(self, event):
+        # Mở hộp thoại để chọn file ảnh
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg *.bmp *.gif)")
+
+        # Nếu người dùng chọn ảnh, lấy đường dẫn và hiển thị ảnh
+        if file_dialog.exec():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                photo_path = selected_files[0]
+                self.photo_label.setPixmap(QPixmap(photo_path).scaled(self.photo_label.size(), Qt.AspectRatioMode.KeepAspectRatio))
+                self.photo_label.setText("")  # Xóa chữ khi đã có ảnh
+                self.photo_path = photo_path  # Lưu đường dẫn ảnh
 
     def reset_fields(self):
         self.id_input.clear()
@@ -225,16 +255,21 @@ class StudentInformationManagement(QWidget):
         address = self.address_input.text()
 
         # Câu lệnh SQL để chèn dữ liệu
+        photo_path = getattr(self, "photo_path", None)  # Lấy đường dẫn ảnh nếu có
         query = """
-        INSERT INTO students (nameSt, dob, gender, CCCD, email, address, phone, class)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO students (nameSt, dob, gender, CCCD, email, address, phone, class, photo_path)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = (name, dob, gender, cccd, email, address, phone, student_class)
+        values = (name, dob, gender, cccd, email, address, phone, student_class, photo_path)
 
         try:
             cursor.execute(query, values)
             db.commit()
             print("Lưu học sinh thành công!")
+            # đặt lại khung ảnh như ban đầu, xóa hình
+            self.photo_label.setPixmap(QPixmap())  # xóa hình
+            self.photo_label.setText("Click để tải ảnh")  # hiện chữ
+            self.photo_path = None  # xóa đường dẫn hình
             self.reset_fields()
         except Exception as e:
             print(f"Lỗi khi lưu học sinh: {e}")
@@ -393,3 +428,8 @@ class StudentInformationManagement(QWidget):
             cursor.close()
             db.close()
 
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    main_window = StudentInformationManagement(" ")
+    main_window.show()
+    sys.exit(app.exec())

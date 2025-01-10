@@ -1,17 +1,15 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton,
-    QComboBox, QTableWidget, QVBoxLayout,
+    QComboBox, QTableWidget, QVBoxLayout, QFileDialog,
     QHBoxLayout, QGroupBox, QGridLayout, QHeaderView, QDateTimeEdit, QTableWidgetItem, QMessageBox, QDialog, QStackedWidget
 
 
 )
 from PyQt6.QtCore import Qt, QDate
 import MySQLdb as mdb
-
+from datetime import timedelta
+import pandas as pd
 import Global
-
-from Global import GLOBAL_ACCOUNTID
-
 
 
 class ClassManagementView(QWidget):
@@ -131,21 +129,39 @@ class ClassManagementView(QWidget):
         self.addclass_button = QPushButton("Thêm lớp học")
         self.addclass_button.setStyleSheet("background-color: black; color: white;")
 
+        # Tạo các nút với phong cách giống nhau
+        self.import_button = QPushButton("Import")
+        self.import_button.setStyleSheet("background-color: black; color: white;")
+
+        self.addclass_button = QPushButton("Thêm lớp học")
+        self.addclass_button.setStyleSheet("background-color: black; color: white;")
+
         self.save_button = QPushButton("Lưu")
         self.save_button.setStyleSheet("background-color: black; color: white;")
+
         self.edit_button = QPushButton("Sửa")
         self.edit_button.setStyleSheet("background-color: black; color: white;")
+
         self.delete_button = QPushButton("Xóa")
         self.delete_button.setStyleSheet("background-color: black; color: white;")
 
-        button_layout.addWidget(self.addclass_button)
+        # Thay thế QHBoxLayout bằng QGridLayout
+        button_layout = QGridLayout()
 
-        button_layout.addWidget(self.save_button)
-        button_layout.addWidget(self.edit_button)
-        button_layout.addWidget(self.delete_button)
+        # Thêm các nút vào layout lưới, chia thành 2 dòng, mỗi dòng 3 ô
+        buttons = [
+            self.import_button, self.addclass_button, self.save_button,
+            self.edit_button, self.delete_button
+        ]
 
-        student_layout.addLayout(button_layout, 7, 0, 1, 4)  # Thêm hàng nút vào layout lưới
-        student_group.setLayout(student_layout)  # Đặt layout cho nhóm
+        for index, button in enumerate(buttons):
+            row = index // 3  # Dòng hiện tại
+            col = index % 3   # Cột hiện tại
+            button_layout.addWidget(button, row, col)
+
+        # Thêm layout nút vào layout chính
+        student_layout.addLayout(button_layout, 7, 0, 2, 3)  # Chiếm 2 dòng, 3 cột
+        student_group.setLayout(student_layout)
 
         # ----------- Phần hệ thống tìm kiếm (bên phải) -----------
         table_group = QGroupBox("Hệ Thống Tìm kiếm")  # Nhóm chứa bảng và chức năng tìm kiếm
@@ -188,27 +204,144 @@ class ClassManagementView(QWidget):
         # Đặt outer_layout làm layout chính của cửa sổ
         self.setLayout(outer_layout)
 
+        self.import_button.clicked.connect(self.importFile)
         self.addclass_button.clicked.connect(self.add_class_popup)
-
-        self.save_button.clicked.connect(self.save_student)
-        self.edit_button.clicked.connect(self.edit_student)
-        self.delete_button.clicked.connect(self.delete_student)
+        self.save_button.clicked.connect(self.save_session)
+        self.edit_button.clicked.connect(self.edit_session)
+        self.delete_button.clicked.connect(self.delete_session)
         self.search_button.clicked.connect(self.search_session)
-        self.view_all_button.clicked.connect(self.view_all_students)
+        self.view_all_button.clicked.connect(self.view_all_session)
 
 
 
     def reset_fields(self):
         self.id_input.clear()
-        self.sessionName.clear();
+        self.sessionName.clear()
         self.classname.setCurrentIndex(0)  # Chọn lại giá trị mặc định đầu tiên
         self.datetime.setDate(QDate.currentDate())  # Đặt lại ngày hiện tại
         self.end_time.clear()
         self.startTime.clear()
 
+    # nut import 
+    def importFile(self):
+        # Mở hộp thoại để người dùng chọn file Excel
+        file, _ = QFileDialog.getOpenFileName(self, "Chọn file Excel để import", "", "Excel Files (*.xls *.xlsx)")
+        if not file:
+            return
+        try:
+            # Đọc dữ liệu từ file Excel sử dụng pandas
+            df = pd.read_excel(file, engine='openpyxl')  # Đọc tệp .xlsx
+            
+            db = mdb.connect(
+            host='localhost',
+            user='root',
+            passwd='',
+            db="facerecognitionsystem")
+            cursor = db.cursor()
+
+            # Lặp qua từng dòng và gán vào biến
+            for index, row in df.iterrows():
+                try:
+                    classname = row['Lớp']  
+                    sessionname = row['Tên buổi']  
+                    startDate = pd.to_datetime(row["Ngày bắt đầu"], format="%y/%m/%d", errors='coerce')
+                    endDate = pd.to_datetime(row["Ngày kết thúc"], format="%yy/%m/%d", errors='coerce')
+                    time = row["Thời gian"]
+
+                    # Kiểm tra dữ liệu ngày tháng
+                    if pd.isna(startDate) or pd.isna(endDate) or startDate > endDate:
+                        QMessageBox.warning(self, "Lỗi", f"Ngày bắt đầu hoặc kết thúc không hợp lệ tại dòng {index + 1}")
+                        break
+                    
+                    # Kiểm tra xem tên lớp học đã tồn tại trong cơ sở dữ liệu chưa
+                    check_query = "SELECT COUNT(*) FROM classes WHERE nameC = %s and TId = %s"
+                    cursor.execute(check_query, (classname, Global.GLOBAL_ACCOUNTID))
+                    result = cursor.fetchone()
+                    
+                    if result[0] == 0: 
+                        # Thực hiện truy vấn để thêm lớp học
+                        query = "INSERT INTO classes (nameC, TId) VALUES (%s, %s)"
+                        cursor.execute(query, (classname, Global.GLOBAL_ACCOUNTID))
+                        db.commit()
+                        class_id = cursor.lastrowid
+                    else:
+                        print("vao day")
+                        # Nếu lớp học đã tồn tại, lấy ID của lớp học
+                        query_get_id = "SELECT CId FROM classes WHERE nameC = %s  and TId = %s"
+                        cursor.execute(query_get_id, (classname,Global.GLOBAL_ACCOUNTID))
+                        class_id = cursor.fetchone()[0]
+                    #tinh so tuan cua 1 lớp học
+                    weeks =((endDate - startDate).days // 7 ) + 1
+                    for n in range(weeks+1):
+                        date = startDate + timedelta(weeks=n)
+                        # Tách chuỗi bằng dấu '-'
+                        start_time, end_time = map(str.strip, time.split('-')) 
+
+                        query_check = """
+                                    SELECT sessionId FROM sessions
+                                    WHERE cId = %s AND sessionDate = %s AND startTime = %s
+                                    """
+                        cursor.execute(query_check, (class_id, date, start_time))
+                        existing_session = cursor.fetchone()
+
+                        if existing_session:
+                            QMessageBox.warning(self, "Lỗi", f"Buổi học đã trùng vào {date} và {start_time}!")
+                            break
+                        else:
+                            # Nếu không có buổi học trùng, thực hiện chèn dữ liệu
+                            query_session = """
+                                        INSERT INTO sessions (cId, sessionName, sessionDate, startTime, endTime)
+                                        VALUES (%s, %s, %s, %s, %s)
+                                        """
+                            values = (class_id, sessionname, date, start_time, end_time)
+                            cursor.execute(query_session, values)
+                            db.commit()
+                            print("Lưu buổi học thành công!")
+                except Exception as e:
+                    db.rollback()
+                    QMessageBox.warning(self, "Lỗi",f"Lỗi khi lưu buổi học: {e}")
+                    print(f"Lỗi khi lưu buổi học:" + e)
+                    break 
+
+            cursor.close()
+            db.close()
+            # Sau khi import thành công, bạn có thể đóng popup nếu muốn
+            class_id = self.loadData()
+            self.classname.clear()
+            self.classname.addItems(class_id)
+            print("load du lieu da luu")
+            self.closeImportPopup()
+            self.showMessage("Dữ liệu đã được import thành công!", "Thông báo", QMessageBox.Icon.Information)
+        except Exception as e:
+            # Nếu có lỗi khi đọc file
+            db.rollback()
+            self.closeImportPopup()
+            self.showMessage(f"Đã có lỗi khi đọc file: {str(e)}", "Lỗi", QMessageBox.Icon.Critical)
+
+    def showMessage(self, text, title, icon):
+        msg = QMessageBox(self)
+        msg.setIcon(icon)
+        msg.setText(text)
+        msg.setWindowTitle(title)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
+
+    def showImportPopup(self):
+        self.import_popup = QMessageBox(self)
+        self.import_popup.setIcon(QMessageBox.Icon.Information)
+        self.import_popup.setText("Đang import vào CSDL...")
+        self.import_popup.setWindowTitle("Thông báo")
+        self.import_popup.setStandardButtons(QMessageBox.StandardButton.NoButton)
+        self.import_popup.setModal(True)
+        self.import_popup.show()
+
+    def closeImportPopup(self):
+        # Đóng popup thông báo
+        if hasattr(self, 'import_popup'):
+            self.import_popup.close()
 
     # nút lưu
-    def save_student(self):
+    def save_session(self):
         db = mdb.connect(
             host='localhost',
             user='root',
@@ -265,7 +398,7 @@ class ClassManagementView(QWidget):
         cursor.close()
         db.close()
 
-    def edit_student(self):
+    def edit_session(self):
     # Kiểm tra dữ liệu ID
         session_id = self.id_input.text().strip()
         if not session_id:
@@ -325,7 +458,7 @@ class ClassManagementView(QWidget):
             cursor.close()
             db.close()
 # nút xóa
-    def delete_student(self):
+    def delete_session(self):
         session_id = self.id_input.text().strip()
         if not session_id:
             print("Cần nhập ID Học sinh để xóa!")
@@ -402,7 +535,7 @@ class ClassManagementView(QWidget):
 
 
     # xem tất cả
-    def view_all_students(self):
+    def view_all_session(self):
         try:
             db = mdb.connect(
                 host='localhost',
