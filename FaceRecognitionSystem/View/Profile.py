@@ -4,6 +4,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, \
     QGraphicsDropShadowEffect, QLineEdit, QDateEdit, QGroupBox, QRadioButton, QMessageBox, QStackedWidget
 import MySQLdb as mdb
+import Global
 
 
 class ProfileView(QWidget):
@@ -62,7 +63,7 @@ class ProfileView(QWidget):
                padding: 5px;
                font-size: 14px;
            """)
-        self.username_field.setText(self.username)
+        self.username_field.setText(Global.GLOBAL_ACCOUNT)
         print(self.username)
 
         self.dob_label = QLabel("Năm sinh: ")
