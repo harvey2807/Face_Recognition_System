@@ -175,6 +175,8 @@ class BaseTableWindow(QWidget):
 
 
 
+    
+    # Tìm kiếm trong bảng theo ID nhập vào.
 
     def search_by_id_or_class_name(self):
         search_text = self.search_input.text().strip()  # Lấy nội dung tìm kiếm
