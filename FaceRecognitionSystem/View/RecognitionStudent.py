@@ -35,7 +35,7 @@ class RecognitionStudentView(QWidget):
         cursor = db.cursor()
 
 
-        self.model = load_model("D:\Python\model.keras")
+        self.model = load_model("D:\\Python\\model.keras")
 
         self.start_recognition = False
         self.count = 0
@@ -560,6 +560,64 @@ class RecognitionStudentView(QWidget):
         if self.camera:
             self.camera.release()
         event.accept()
+
+    # def process_frame(self, frame):
+    #     face = self.face_extractor(frame)
+    #     if face is not None:
+    #         face_resized = cv2.resize(face, (224, 224))
+    #         embedding = self.extract_embedding(self.model, face_resized)
+
+    #         label, score = self.recognize_face(embedding)
+    #         print(f"Detected: {label} (score: {score})")
+
+    #         if label != "Unknown":
+    #             cv2.putText(frame, f"{label} ({score:.2f})", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            
+    #             self.update_face_recognitioned(label, frame)
+
+    # def update_face_recognitioned(self, label, frame1):
+    #     name = label
+    #     if name != "Unknown":
+    #         self.id_input.setText(str(name))
+    #         self.name_input.setText(self.mapIdtoName[int(name)-1])  # Lấy tên từ `mapIdtoName`
+    #         self.time_input.setText(QTime.currentTime().toString("hh:mm:ss"))
+            
+    #         if name not in self.fronter:
+    #             self.fronter.append(name)
+    #             print("name added:", self.fronter)
+
+    #             face_resized = cv2.resize(frame1, (224, 224)) 
+    #             frame_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
+    #             height, width, channel = frame_rgb.shape
+    #             step = channel * width
+    #             q_image = QImage(frame_rgb.data, width, height, step, QImage.Format.Format_RGB888)
+    #             self.label_image.setPixmap(QPixmap.fromImage(q_image))
+
+    #             self.count = 2  
+    #         else:
+    #             self.count = 0
+
+    # def recognize_face(self, new_embedding, threshold = 0.8):
+    #     embeddings, labels = self.load_embeddings()
+    #     best_match = "Unknown"
+    #     best_score = -1
+
+    #     for embedding, label in zip(embeddings, labels):
+    #         score = self.cosine(new_embedding, embedding)
+    #         if (score > best_score):
+    #             best_score = score
+    #             best_match = label
+            
+    #     if best_score >= threshold:
+    #             return best_match, best_score
+          
+    #     return "Unknown", best_score
+
+    # def cosine(self, embedding1, embedding2):
+    #     dotproduct = np.dot(embedding1, embedding2)
+    #     norm1 = np.linalg.norm(embedding1)
+    #     norm2 = np.linalg.norm(embedding2)
+    #     return dotproduct/(norm1 * norm2)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
